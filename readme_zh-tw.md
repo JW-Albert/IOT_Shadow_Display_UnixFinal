@@ -2,6 +2,8 @@
 
 本前端網頁為 IOT_Shadow_Display_UnixFinal 系統中的中控室控制介面，使用純 HTML + JavaScript 建構，透過呼叫 Flask API 來達成對設備的監控與控制。
 
+## English version description
+- https://github.com/JW-Albert/IOT_Shadow_Display_UnixFinal/blob/frontend/readme.md
 ---
 
 ## ✅ 功能說明
