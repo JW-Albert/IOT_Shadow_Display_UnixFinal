@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-tw">
+
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>中控室設備控制面板</title>
-
     <style>
       body {
         font-family: 'Segoe UI', sans-serif;
@@ -19,7 +18,7 @@
         background: #fff;
         padding: 30px;
         border-radius: 12px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       }
 
       h1 {
@@ -48,46 +47,37 @@
       }
     </style>
   </head>
-  
+
   <body>
     <div class="container">
       <h1>中控室設備控制面板</h1>
-
       <div class="status-box">
         <h3>設備狀態：<span id="deviceStatus">讀取中...</span></h3>
       </div>
-
       <div class="controls">
         <button onclick="updateStatus(1)">開啟設備</button>
         <button onclick="updateStatus(0)">關閉設備</button>
       </div>
-
       <div class="switch">
         <label for="permissionToggle">允許地端操作：</label>
-        <input type="checkbox" id="permissionToggle" onchange="updatePermission()">
+        <input type="checkbox" id="permissionToggle" onchange="updatePermission()" />
       </div>
     </div>
 
     <script>
-      const apiKey = "my-secure-api-key"; // 替換為你的金鑰
-      const apiBase = "/api"; // 替換為你的後端位址
+      const apiBase = "/api/shadow"; // Apache 反向代理自動加 Authorization
 
       async function fetchStatus() {
-        const res = await fetch(`${apiBase}/shadow/get?type=reported`, {
-          headers: { Authorization: apiKey }
-        });
+        const res = await fetch(`${apiBase}/get?type=reported`);
         const data = await res.json();
         const status = data.status === 1 ? '開啟' : '關閉';
         document.getElementById("deviceStatus").innerText = status;
       }
 
       async function updateStatus(value) {
-        await fetch(`${apiBase}/shadow/update`, {
+        await fetch(`${apiBase}/update`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': apiKey
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             type: "desired",
             data: { status: value }
@@ -98,12 +88,9 @@
 
       async function updatePermission() {
         const value = document.getElementById("permissionToggle").checked ? 1 : 0;
-        await fetch(`${apiBase}/shadow/update`, {
+        await fetch(`${apiBase}/update`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': apiKey
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             type: "desired",
             data: { permission: value }
@@ -112,9 +99,7 @@
       }
 
       async function initPermissionSwitch() {
-        const res = await fetch(`${apiBase}/shadow/get?type=desired`, {
-          headers: { Authorization: apiKey }
-        });
+        const res = await fetch(`${apiBase}/get?type=desired`);
         const data = await res.json();
         document.getElementById("permissionToggle").checked = data.permission === 1;
       }
@@ -122,7 +107,8 @@
       window.onload = () => {
         fetchStatus();
         initPermissionSwitch();
-      }
+      };
     </script>
   </body>
+
 </html>
