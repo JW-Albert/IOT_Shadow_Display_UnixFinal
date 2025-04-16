@@ -1,9 +1,8 @@
 # Frontend README – Central Control Web Interface
-
-This frontend interface is part of the IOT_Shadow_Display_UnixFinal project. It is designed to serve as the central control panel (control room) for monitoring and managing remote IoT devices using a simple HTML + JavaScript interface. It communicates directly with the Flask-based Shadow API.
-
 ## 中文版說明
 - https://github.com/JW-Albert/IOT_Shadow_Display_UnixFinal/blob/frontend/readme_zh-tw.md
+  
+This frontend interface is part of the IOT_Shadow_Display_UnixFinal project. It is designed to serve as the central control panel (control room) for monitoring and managing remote IoT devices using a simple HTML + JavaScript interface. It communicates directly with the Flask-based Shadow API.
 
 ---
 
