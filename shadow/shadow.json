@@ -1,0 +1,14 @@
+{
+    "state": {
+      "desired": {
+        "status": 0,
+        "permission": 1
+      },
+      "reported": {
+        "status": 0,
+        "permission": 1
+      }
+    },
+    "delta": {}
+  }
+  
