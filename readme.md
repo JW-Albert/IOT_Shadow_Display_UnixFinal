@@ -42,9 +42,6 @@ IOT_Shadow_Display_UnixFinal/
 ├── src/
 │   └── main.py                   # Flask API (handles update/get)
 │
-├── static/
-│   └── index.html                # Web control UI (central control)
-│
 └── requirements.txt              # Python dependencies
 ```
 
@@ -104,16 +101,6 @@ Each device has an individual JSON file named `shadow_<device_id>.json`.
 - Admin (central control) can enable/disable local device control by setting `permission`.
 - Local gateway may support an **emergency override switch** if central is unreachable.
 - Local devices follow `desired.status` only if `permission = 1`, unless emergency mode is triggered.
-
----
-
-## 🖥️ Frontend Control Page
-
-Accessible via browser (hosted locally or remotely), features:
-
-- Display current device status
-- Toggle device on/off
-- Toggle permission for local gateway control
 
 ---
 
