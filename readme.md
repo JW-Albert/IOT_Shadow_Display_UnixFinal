@@ -168,7 +168,7 @@ You can test without GPIO using a simulation:
 
 ### 🙌 Contributors
 - Albert Wang（王建葦） - System Design, Backend & Integration
-- Andy Chean (陳稚翔)  - Frontend Design
+- Andy Chean（陳稚翔） - Frontend Design
 
 ---
 ### 📜 License
