@@ -2,16 +2,26 @@ from flask import Flask, request, jsonify
 import os
 import json
 
-app = Flask( __name__ )
+app = Flask(__name__)
 
 # === 設定 ===
-SHADOW_FILE = os.path.join(os.path.dirname(__file__) ,'../shadow/shadow.json')
+SHADOW_FILE = os.path.join(os.path.dirname(__file__), '../shadow/shadow.json')
 SECRET_KEY = "my-secure-api-key"
 
+# === 請求前處理（授權檢查 + 請求日誌） ===
+@app.before_request
+def before_request():
+    print(f"收到請求: {request.method} {request.path}")
+    if request.method != "OPTIONS":
+        token = request.headers.get("Authorization")
+        if token != SECRET_KEY:
+            print("🔒 Unauthorized request")
+            return jsonify({"error": "Unauthorized"}), 401
+
 # === 初始化 JSON 如果不存在 ===
-def load_shadow () :
-    if not os.path.exists( SHADOW_FILE ) :
-        os.makedirs( os.path.dirname( SHADOW_FILE ) ,exist_ok = True )
+def load_shadow():
+    if not os.path.exists(SHADOW_FILE):
+        os.makedirs(os.path.dirname(SHADOW_FILE), exist_ok=True)
         data = {
             "state": {
                 "desired": {
@@ -25,18 +35,17 @@ def load_shadow () :
             },
             "delta": {}
         }
-        save_shadow( data )
-
+        save_shadow(data)
         return data
-    with open( SHADOW_FILE ,'r' ) as f :
-        return json.load( f )
+    with open(SHADOW_FILE, 'r') as f:
+        return json.load(f)
 
-def save_shadow( data ):
-    with open( SHADOW_FILE ,'w' ) as f :
-        json.dump( data ,f ,indent = 4 )
+def save_shadow(data):
+    with open(SHADOW_FILE, 'w') as f:
+        json.dump(data, f, indent=4)
 
 # === 計算 delta 欄位 ===
-def update_delta( shadow ) :
+def update_delta(shadow):
     desired = shadow["state"].get("desired", {})
     reported = shadow["state"].get("reported", {})
     delta = {}
@@ -46,16 +55,9 @@ def update_delta( shadow ) :
     shadow["delta"] = delta
     return shadow
 
-# === 權限檢查 ===
-def is_authorized():
-    return request.headers.get("Authorization") == SECRET_KEY
-
 # === 更新 desired / reported ===
 @app.route('/shadow/update', methods=['POST'])
 def update_shadow():
-    if not is_authorized():
-        return jsonify({"error": "Unauthorized"}), 403
-
     req = request.get_json()
     shadow_type = req.get("type")
     update_data = req.get("data", {})
@@ -76,9 +78,6 @@ def update_shadow():
 # === 查詢 shadow 資料 ===
 @app.route('/shadow/get', methods=['GET'])
 def get_shadow_data():
-    if not is_authorized():
-        return jsonify({"error": "Unauthorized"}), 403
-
     shadow_type = request.args.get("type", "full")
     shadow = load_shadow()
 
