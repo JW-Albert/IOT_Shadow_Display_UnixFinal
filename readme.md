@@ -1,4 +1,7 @@
-# IOT_Shadow_Display_UnixFinal – Project Overview (English)
+# IOT_Shadow_Display_UnixFinal – Project Overview
+
+## 中文版說明
+- https://github.com/JW-Albert/IOT_Shadow_Display_UnixFinal/blob/main/readme_zh-tw.md
 
 ## 🔍 Project Summary
 
