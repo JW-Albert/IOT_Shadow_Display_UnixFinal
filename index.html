@@ -71,6 +71,7 @@
     <script>
       const apiKey = "my-secure-api-key"; // 替換為你的金鑰
       const apiBase = "http://你的API主機:5000"; // 替換為你的後端位址
+      //const apiBase = "http://unix.jw-albert.dev:5000";
 
       async function fetchStatus() {
         const res = await fetch(`${apiBase}/shadow/get?type=reported`, {
