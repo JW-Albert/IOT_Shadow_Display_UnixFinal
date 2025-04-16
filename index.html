@@ -1,12 +1,128 @@
 <!DOCTYPE html>
-<html lang = "en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>IOT Shadows Display</title>
-    </head>
+<html lang="zh-tw">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <body>
-        it runs
-    </body>
+    <title>中控室設備控制面板</title>
+
+    <style>
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #f3f3f3;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: auto;
+        background: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      .status-box {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .controls button {
+        width: 48%;
+        padding: 10px;
+        margin: 5px 1%;
+        font-size: 16px;
+      }
+
+      .switch {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      .switch label {
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  
+  <body>
+    <div class="container">
+      <h1>中控室設備控制面板</h1>
+
+      <div class="status-box">
+        <h3>設備狀態：<span id="deviceStatus">讀取中...</span></h3>
+      </div>
+
+      <div class="controls">
+        <button onclick="updateStatus(1)">開啟設備</button>
+        <button onclick="updateStatus(0)">關閉設備</button>
+      </div>
+
+      <div class="switch">
+        <label for="permissionToggle">允許地端操作：</label>
+        <input type="checkbox" id="permissionToggle" onchange="updatePermission()">
+      </div>
+    </div>
+
+    <script>
+      const apiKey = "my-secure-api-key"; // 替換為你的金鑰
+      const apiBase = "http://你的API主機:5000"; // 替換為你的後端位址
+
+      async function fetchStatus() {
+        const res = await fetch(`${apiBase}/shadow/get?type=reported`, {
+          headers: { Authorization: apiKey }
+        });
+        const data = await res.json();
+        const status = data.status === 1 ? '開啟' : '關閉';
+        document.getElementById("deviceStatus").innerText = status;
+      }
+
+      async function updateStatus(value) {
+        await fetch(`${apiBase}/shadow/update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': apiKey
+          },
+          body: JSON.stringify({
+            type: "desired",
+            data: { status: value }
+          })
+        });
+        fetchStatus();
+      }
+
+      async function updatePermission() {
+        const value = document.getElementById("permissionToggle").checked ? 1 : 0;
+        await fetch(`${apiBase}/shadow/update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': apiKey
+          },
+          body: JSON.stringify({
+            type: "desired",
+            data: { permission: value }
+          })
+        });
+      }
+
+      async function initPermissionSwitch() {
+        const res = await fetch(`${apiBase}/shadow/get?type=desired`, {
+          headers: { Authorization: apiKey }
+        });
+        const data = await res.json();
+        document.getElementById("permissionToggle").checked = data.permission === 1;
+      }
+
+      window.onload = () => {
+        fetchStatus();
+        initPermissionSwitch();
+      }
+    </script>
+  </body>
 </html>
