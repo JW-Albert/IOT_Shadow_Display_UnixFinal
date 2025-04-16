@@ -15,7 +15,7 @@ def before_request():
     if request.method != "OPTIONS":
         token = request.headers.get("Authorization")
         if token != SECRET_KEY:
-            print("🔒 Unauthorized request")
+            print("Unauthorized request")
             return jsonify({"error": "Unauthorized"}), 401
 
 # === 初始化 JSON 如果不存在 ===
