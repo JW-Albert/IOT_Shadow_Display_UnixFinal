@@ -1,138 +1,65 @@
-# IOT_Shadow_Display_UnixFinal
+# IOT_Shadow_Display_UnixFinal – Project Overview (English)
 
-This is a final project for a Unix course. The main goal of this project is to simulate the operation of AWS IoT Shadow and implement a complete IoT system architecture, including:
+## 🔍 Project Summary
 
-- Web-based control (frontend)
-- Local device control (backend)
-- Remote permission management
-- Actual hardware control (e.g., light bulb on/off)
-- Shadow synchronization using local JSON instead of database
+IOT_Shadow_Display_UnixFinal is a Unix course final project that simulates the operation of AWS IoT Shadow. It implements a complete IoT control architecture, including:
 
-The system emulates AWS Shadow by handling **desired**, **reported**, and **delta** states through a custom JSON-based backend logic.
+- Central control via web interface
+- Local gateway operation and override logic
+- Device status synchronization through a custom Shadow system
 
----
-
-## 📦 System Environment
-
-- OS: Debian 12
-- Web Server: Flask (Python)
-- Storage: JSON file (one per device, stored in `shadow/`)
-- Programming Languages: Python / HTML / JS / Bash
+The system uses Flask and JSON files to manage device state, eliminating the need for cloud services or databases, making it lightweight and suitable for offline or embedded environments.
 
 ---
 
-## ⚙️ System Setup and Preparation
+## 🧠 Key Features
 
-### 1. Create Python virtual environment and install Flask
+- Device Shadow mechanism (desired / reported / delta)
+- RESTful API with API key authentication
+- Frontend web interface for control and monitoring
+- Local gateway emergency override support
+- Support for multiple devices via per-device JSON files
 
-```bash
-sudo apt update && sudo apt install python3-venv -y
-python3 -m venv venv
-source venv/bin/activate
-pip install flask
+---
+
+## 🖥️ Technology Stack
+
+- **Backend:** Python (Flask)
+- **Frontend:** HTML / JavaScript (AJAX)
+- **Storage:** JSON file (one per device)
+- **System:** Debian 12 (Linux)
+
+---
+
+## 📁 Directory Structure
+
 ```
-
-### 2. Project Structure
-
-```bash
 IOT_Shadow_Display_UnixFinal/
-├── shadow/
-│   └── shadow_device001.json     # Device shadow (auto-created)
-│
-├── src/
-│   └── main.py                   # Flask API (handles update/get)
-│
-├── static/
-│   └── index.html                # Web control UI (central control)
-│
-└── requirements.txt              # Python dependencies
+├── src/             # Flask backend
+├── shadow/          # Shadow JSON files
+├── static/          # Web frontend
+├── docs/            # Documentation
+└── venv/            # Python virtual environment
 ```
 
 ---
 
-## 🧠 System Architecture
+## 🔐 Use Cases
 
-```
-[Frontend (HTML/JS)]
-        ↓
-    [Flask API]
-        ↓
-[JSON-based Shadow State]
-        ↓
-[Local Device Control Logic]
-```
-
-- Frontend controls desired state and permission via HTTP requests
-- Backend (Flask) handles shadow update/get APIs and calculates delta
-- Local gateway checks delta and updates reported state
-- Devices act based on the updated instructions
+- IoT device control and monitoring
+- Local edge computing scenarios
+- Systems requiring emergency fallback control
+- Educational use or embedded system prototyping
 
 ---
 
-## ☁️ Shadow System Description
+## 🙌 Credits
 
-Each device has an individual JSON file named `shadow_<device_id>.json`.
-
-### JSON format:
-
-```json
-{
-  "state": {
-    "desired": {
-      "status": 1,
-      "permission": 1
-    },
-    "reported": {
-      "status": 0,
-      "permission": 1
-    }
-  },
-  "delta": {
-    "status": 1
-  }
-}
-```
-
-- `desired`: What the user or frontend wants
-- `reported`: Actual status from the device
-- `delta`: Difference between `desired` and `reported` (only generated when needed)
-
----
-
-## 🔐 Remote Permission Control
-
-- Admin (central control) can enable/disable local device control by setting `permission`.
-- Local gateway may support an **emergency override switch** if central is unreachable.
-- Local devices follow `desired.status` only if `permission = 1`, unless emergency mode is triggered.
-
----
-
-## 🖥️ Frontend Control Page
-
-Accessible via browser (hosted locally or remotely), features:
-
-- Display current device status
-- Toggle device on/off
-- Toggle permission for local gateway control
-
----
-
-## 🧪 Testing Environment
-
-You can simulate device behavior with Python scripts instead of real hardware.
-
-- Local polling scripts check delta every few seconds
-- Scripts update `reported` state after acting on `delta`
-
----
-
-## 🙌 Contributors
-
-- Albert Wang（王建葦） – System Design, Backend Integration
-- Andy Chean（陳稚翔） – Frontend UI & API Integration
+- Albert Wang（王建葦） – System Architecture, Backend, Shadow Logic
+- Andy Chean（陳稚翔） – Frontend Interface Design
 
 ---
 
 ## 📜 License
 
-This project is for educational use only. No license required.
+This project is provided for educational use only. Free to modify and extend.
