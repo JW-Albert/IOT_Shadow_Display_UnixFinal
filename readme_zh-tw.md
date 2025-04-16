@@ -1,9 +1,10 @@
+## English version description
+- https://github.com/JW-Albert/IOT_Shadow_Display_UnixFinal/tree/Shadow/readme.md
+
 # Shadow 系統說明文件
 
 本系統中的 Shadow 模擬 AWS IoT Device Shadow，用於在前端中控、地端 Gateway 與實體設備之間同步狀態。
 
-## English version description
-- https://github.com/JW-Albert/IOT_Shadow_Display_UnixFinal/tree/Shadow/readme.md
 ---
 
 ## 什麼是 Shadow？
