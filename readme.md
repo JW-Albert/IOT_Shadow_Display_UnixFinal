@@ -2,6 +2,8 @@
 
 In this project, the Shadow system simulates the AWS IoT Device Shadow, managing the state synchronization between a central control interface (frontend), a local gateway (edge device), and the physical device.
 
+## 中文版說明
+- https://github.com/JW-Albert/IOT_Shadow_Display_UnixFinal/tree/Shadow/readme_zh-tw.md
 ---
 
 ## What is a Shadow?
