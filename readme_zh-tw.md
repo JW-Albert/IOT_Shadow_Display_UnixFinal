@@ -1,5 +1,8 @@
 # IOT_Shadow_Display_UnixFinal – 專案總說明
 
+## English version description
+- https://github.com/JW-Albert/IOT_Shadow_Display_UnixFinal/blob/main/readme.md
+- 
 ## 🔍 專案簡介
 
 IOT_Shadow_Display_UnixFinal 是一個 Unix 課程期末專案，模擬 AWS IoT Shadow 的運作，實作一套完整的 IoT 控制架構，包含：
