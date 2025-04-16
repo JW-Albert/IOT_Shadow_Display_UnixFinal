@@ -1,175 +1,166 @@
-# IOT_Shadow_Display_UnixFinal
-This is a final project for a Unix course. The main goal of this project is to simulate the operation of AWS IoT Shadow and implement a complete IoT system architecture, including:
-- Web-based control (frontend)
-- Local device control (backend)
-- Remote permission management (admin system)
-- Actual hardware control (e.g., light bulb on/off)
-The system emulates how device shadow works in AWS by handling **desired**, **reported**, and **delta** states through a custom JSON-based protocol and backend logic.
+# 中控室前端控制介面說明 (Frontend README)
+
+本前端網頁為 IOT_Shadow_Display_UnixFinal 系統中的中控室控制介面，使用純 HTML + JavaScript 建構，透過呼叫 Flask API 來達成對設備的監控與控制。
 
 ---
 
-## 📦 System Environment
-- OS: Debian 12
-- Web Server: Apache2
-- Database: MariaDB
-- Programming Languages: PHP / Python / Bash
-- Frontend: HTML / JS / CSS (Bootstrap)
-- Backend: Python + C ++ + Bash
+## ✅ 功能說明
+
+1. **顯示設備狀態**
+   - 從 `/shadow/get?type=reported` 取得設備目前狀態（status: 0 或 1）
+   - 將狀態顯示為「開啟」或「關閉」
+
+2. **遠端控制設備開關**
+   - 點擊「開啟設備」或「關閉設備」按鈕
+   - 呼叫 `/shadow/update`，設定 `desired.status`
+
+3. **設定地端控制權限**
+   - 透過切換開關控制 `desired.permission`
+   - permission = 1：允許地端操作
+   - permission = 0：禁止地端操作
 
 ---
 
-## ⚙️ System Setup and Preparation
-### 1. Update and upgrade apt
-```bash
-apt update -y && apt upgrade -y
+## 🛠️ 使用方式
+
+1. 修改 `index.html` 中的設定：
+
+```js
+const apiKey = "your-api-key";               // 替換為後端的 Authorization 金鑰
+const apiBase = "http://your-api-host:5000"; // 替換為後端主機位址
 ```
 
-### 2. Add a new user and create a dev group
-```bash
-adduser NAME
-groupadd dev
-adduser NAME dev
-```
+2. 部署 index.html 至任何靜態網頁伺服器，例如：
+   - Apache2 (`/var/www/html/index.html`)
+   - 本機開啟：用瀏覽器直接開啟 html 檔
 
-### 3. Install Apache2
-```bash
-apt install apache2
-```
-
-### 4. Grant permission to dev group members
-```bash
-chgrp -R dev /var/www/html/*
-chmod -R 774 /var/www/html/*
-```
+3. 開啟網頁後，將自動：
+   - 顯示目前設備狀態
+   - 讀取並套用 permission 狀態
 
 ---
 
-### 5. Install MariaDB
-```bash
-apt install mariadb-server -y
-systemctl start mariadb
-systemctl enable mariadb
-mysql_secure_installation
-```
+## 🔧 所需 API 介面
 
-### 6. Create MariaDB admin user
-```bash
-mysql -u root -p
-```
-
-Then in MySQL shell:
-```sql
-CREATE USER 'admin'@'localhost' IDENTIFIED BY 'your_password';
-GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
-```
+| 方法 | 路徑 | 說明 |
+|------|------|------|
+| GET | `/shadow/get?type=reported` | 取得目前設備狀態 |
+| GET | `/shadow/get?type=desired`  | 取得目前設定的權限狀態 |
+| POST | `/shadow/update` | 傳送 desired.status 或 desired.permission |
 
 ---
 
-### 7. Create a SQL user for the frontend
-```sql
-CREATE DATABASE shadow_control;
-CREATE USER 'webuser'@'localhost' IDENTIFIED BY 'your_password';
-GRANT SELECT, INSERT, UPDATE, DELETE ON shadow_control.* TO 'webuser'@'localhost';
-FLUSH PRIVILEGES;
-```
+## 🧪 範例互動流程
 
----
-
-## 🧱 Project Structure
-```bash
-IOT_Shadow_Display_UnixFinal/
-├── html/                     # Frontend website
-│   ├── index.html            # Main control panel
-│   └── admin.php             # Admin interface
-│
-├── scripts/
-│   ├── update_shadow.py      # Backend logic to sync shadow state
-│   ├── read_gpio.py          # Read status from device
-│   └── control_gpio.py       # Control GPIO or virtual light
-│
-├── db/
-│   └── init.sql              # SQL schema for the shadow database
-│
-└── docs/
-    └── README.md             # This file
-```
-
----
-
-## 🧠 System Architecture
-```csharp
-[Frontend Website]
-     |
-     V
-[PHP/API → MySQL]
-     |
-     V
-[Backend Python/Bash Scripts]
-     |
-     V
-[GPIO / COM / Device Simulator]
-```
-
-- **Frontend:** Allows users to set the desired state.
-- **Database:** Stores desired/reported states, calculates delta.
-- **Backend:** Periodically compares desired/reported, calculates delta, and sends commands to device.
-- **Hardware Layer:** Simulates or controls actual GPIO (e.g., LEDs, relays).
-
----
-
-## ☁️ Shadow System Description
-Each device has the following structure:
+1. 使用者按下「開啟設備」 → 傳送：
 
 ```json
+POST /shadow/update
 {
-  "state": {
-    "desired": {
-      "status": 1,
-      "permission": 1
-    },
-    "reported": {
-      "status": 0,
-      "permission": 1
-    }
-  },
-  "delta": {
-    "status": 1
-  }
+  "type": "desired",
+  "data": { "status": 1 }
 }
 ```
 
-- ```desired```**:** what the frontend or user wants.
-- ```reported```**:** the actual status of the device.
-- ```delta```**:** the difference between desired and reported. Only sent if changed.
+2. 後端比對 `reported`，產生 delta
 
-### Workflow:
-- 1. User changes status/permission via website.
-- 2. Backend script checks database every few seconds.
-- 3. If ```delta``` is not empty, it updates the hardware state.
-- 4. After applying the change, backend updates ```reported```.
+3. 裝置後端輪詢 delta → 執行開啟 → 回報 `reported.status = 1`
+
+4. delta 清空 → 顯示設備已開啟
 
 ---
 
-## 🔐 Remote Permission Control
-Admin accounts can:
-- Change device permission flags.
-- Control whether local or remote users can override the state.
-- View activity logs and delta history.
+## 📁 檔案說明
+
+- `index.html`：前端控制主畫面
+- 使用 Bootstrap + JavaScript（無額外框架）
 
 ---
 
-### 🧪 Testing Environment
-You can test without GPIO using a simulation:
-- ```control_gpio.py``` → prints instead of turning on actual device.
-- Virtual "light" or "device" object changes color or logs state.
+## 📜 授權
+
+本前端頁面為教育專案用途，允許自由修改與應用。
+
+# Frontend README – Central Control Web Interface
+
+This frontend interface is part of the IOT_Shadow_Display_UnixFinal project. It is designed to serve as the central control panel (control room) for monitoring and managing remote IoT devices using a simple HTML + JavaScript interface. It communicates directly with the Flask-based Shadow API.
 
 ---
 
-### 🙌 Contributors
-- Albert Wang（王建葦） - System Design, Backend & Integration
-- Andy Chean（陳稚翔） - Frontend Design
+## ✅ Features
+
+1. **Display Device Status**
+   - Fetches current device state from `/shadow/get?type=reported`
+   - Displays device status as "ON" or "OFF"
+
+2. **Control Remote Device Switch**
+   - Buttons allow turning the device ON or OFF
+   - Sends update to `/shadow/update` by modifying `desired.status`
+
+3. **Manage Local Gateway Permission**
+   - Toggle switch controls `desired.permission`
+   - `permission = 1`: allow local device control
+   - `permission = 0`: deny local control (central control only)
 
 ---
-### 📜 License
-This project is for educational purposes only. No license required.
+
+## 🛠️ How to Use
+
+1. Open `index.html` and configure your settings:
+
+```js
+const apiKey = "your-api-key";               // Replace with your backend Authorization key
+const apiBase = "http://your-api-host:5000"; // Replace with your Flask API host
+```
+
+2. Deploy `index.html` on any web server:
+   - Apache2 (`/var/www/html/index.html`)
+   - Or simply open with a local browser
+
+3. Upon loading, the page will:
+   - Automatically fetch and display the current device status
+   - Apply the current `permission` state
+
+---
+
+## 🔧 Required API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET    | `/shadow/get?type=reported` | Get current device status |
+| GET    | `/shadow/get?type=desired`  | Get current control permissions |
+| POST   | `/shadow/update` | Send updates to `desired.status` or `desired.permission` |
+
+---
+
+## 🧪 Example Control Flow
+
+1. User clicks "Turn ON" button → Sends:
+
+```json
+POST /shadow/update
+{
+  "type": "desired",
+  "data": { "status": 1 }
+}
+```
+
+2. Backend compares with `reported`, generates `delta`
+
+3. Device polls `delta`, performs action, and reports back `reported.status = 1`
+
+4. `delta` becomes empty → System is synchronized
+
+---
+
+## 📁 File Structure
+
+- `index.html` – Central control panel UI
+- HTML + Bootstrap + JavaScript (no external libraries)
+
+---
+
+## 📜 License
+
+This frontend page is provided for educational purposes only. Free to modify and use in academic projects.
+
