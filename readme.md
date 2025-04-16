@@ -1,125 +1,79 @@
 # IOT_Shadow_Display_UnixFinal
+
 This is a final project for a Unix course. The main goal of this project is to simulate the operation of AWS IoT Shadow and implement a complete IoT system architecture, including:
+
 - Web-based control (frontend)
 - Local device control (backend)
-- Remote permission management (admin system)
+- Remote permission management
 - Actual hardware control (e.g., light bulb on/off)
-The system emulates how device shadow works in AWS by handling **desired**, **reported**, and **delta** states through a custom JSON-based protocol and backend logic.
+- Shadow synchronization using local JSON instead of database
+
+The system emulates AWS Shadow by handling **desired**, **reported**, and **delta** states through a custom JSON-based backend logic.
 
 ---
 
 ## 📦 System Environment
+
 - OS: Debian 12
-- Web Server: Apache2
-- Database: MariaDB
-- Programming Languages: PHP / Python / Bash
-- Frontend: HTML / JS / CSS (Bootstrap)
-- Backend: Python + C ++ + Bash
+- Web Server: Flask (Python)
+- Storage: JSON file (one per device, stored in `shadow/`)
+- Programming Languages: Python / HTML / JS / Bash
 
 ---
 
 ## ⚙️ System Setup and Preparation
-### 1. Update and upgrade apt
+
+### 1. Create Python virtual environment and install Flask
+
 ```bash
-apt update -y && apt upgrade -y
+sudo apt update && sudo apt install python3-venv -y
+python3 -m venv venv
+source venv/bin/activate
+pip install flask
 ```
 
-### 2. Add a new user and create a dev group
-```bash
-adduser NAME
-groupadd dev
-adduser NAME dev
-```
+### 2. Project Structure
 
-### 3. Install Apache2
-```bash
-apt install apache2
-```
-
-### 4. Grant permission to dev group members
-```bash
-chgrp -R dev /var/www/html/*
-chmod -R 774 /var/www/html/*
-```
-
----
-
-### 5. Install MariaDB
-```bash
-apt install mariadb-server -y
-systemctl start mariadb
-systemctl enable mariadb
-mysql_secure_installation
-```
-
-### 6. Create MariaDB admin user
-```bash
-mysql -u root -p
-```
-
-Then in MySQL shell:
-```sql
-CREATE USER 'admin'@'localhost' IDENTIFIED BY 'your_password';
-GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
-```
-
----
-
-### 7. Create a SQL user for the frontend
-```sql
-CREATE DATABASE shadow_control;
-CREATE USER 'webuser'@'localhost' IDENTIFIED BY 'your_password';
-GRANT SELECT, INSERT, UPDATE, DELETE ON shadow_control.* TO 'webuser'@'localhost';
-FLUSH PRIVILEGES;
-```
-
----
-
-## 🧱 Project Structure
 ```bash
 IOT_Shadow_Display_UnixFinal/
-├── html/                     # Frontend website
-│   ├── index.html            # Main control panel
-│   └── admin.php             # Admin interface
+├── shadow/
+│   └── shadow_device001.json     # Device shadow (auto-created)
 │
-├── scripts/
-│   ├── update_shadow.py      # Backend logic to sync shadow state
-│   ├── read_gpio.py          # Read status from device
-│   └── control_gpio.py       # Control GPIO or virtual light
+├── src/
+│   └── main.py                   # Flask API (handles update/get)
 │
-├── db/
-│   └── init.sql              # SQL schema for the shadow database
+├── static/
+│   └── index.html                # Web control UI (central control)
 │
-└── docs/
-    └── README.md             # This file
+└── requirements.txt              # Python dependencies
 ```
 
 ---
 
 ## 🧠 System Architecture
-```csharp
-[Frontend Website]
-     |
-     V
-[PHP/API → MySQL]
-     |
-     V
-[Backend Python/Bash Scripts]
-     |
-     V
-[GPIO / COM / Device Simulator]
+
+```
+[Frontend (HTML/JS)]
+        ↓
+    [Flask API]
+        ↓
+[JSON-based Shadow State]
+        ↓
+[Local Device Control Logic]
 ```
 
-- **Frontend:** Allows users to set the desired state.
-- **Database:** Stores desired/reported states, calculates delta.
-- **Backend:** Periodically compares desired/reported, calculates delta, and sends commands to device.
-- **Hardware Layer:** Simulates or controls actual GPIO (e.g., LEDs, relays).
+- Frontend controls desired state and permission via HTTP requests
+- Backend (Flask) handles shadow update/get APIs and calculates delta
+- Local gateway checks delta and updates reported state
+- Devices act based on the updated instructions
 
 ---
 
 ## ☁️ Shadow System Description
-Each device has the following structure:
+
+Each device has an individual JSON file named `shadow_<device_id>.json`.
+
+### JSON format:
 
 ```json
 {
@@ -139,37 +93,46 @@ Each device has the following structure:
 }
 ```
 
-- ```desired```**:** what the frontend or user wants.
-- ```reported```**:** the actual status of the device.
-- ```delta```**:** the difference between desired and reported. Only sent if changed.
-
-### Workflow:
-- 1. User changes status/permission via website.
-- 2. Backend script checks database every few seconds.
-- 3. If ```delta``` is not empty, it updates the hardware state.
-- 4. After applying the change, backend updates ```reported```.
+- `desired`: What the user or frontend wants
+- `reported`: Actual status from the device
+- `delta`: Difference between `desired` and `reported` (only generated when needed)
 
 ---
 
 ## 🔐 Remote Permission Control
-Admin accounts can:
-- Change device permission flags.
-- Control whether local or remote users can override the state.
-- View activity logs and delta history.
+
+- Admin (central control) can enable/disable local device control by setting `permission`.
+- Local gateway may support an **emergency override switch** if central is unreachable.
+- Local devices follow `desired.status` only if `permission = 1`, unless emergency mode is triggered.
 
 ---
 
-### 🧪 Testing Environment
-You can test without GPIO using a simulation:
-- ```control_gpio.py``` → prints instead of turning on actual device.
-- Virtual "light" or "device" object changes color or logs state.
+## 🖥️ Frontend Control Page
+
+Accessible via browser (hosted locally or remotely), features:
+
+- Display current device status
+- Toggle device on/off
+- Toggle permission for local gateway control
 
 ---
 
-### 🙌 Contributors
-- Albert Wang（王建葦） - System Design, Backend & Integration
-- Andy Chean（陳稚翔） - Frontend Design
+## 🧪 Testing Environment
+
+You can simulate device behavior with Python scripts instead of real hardware.
+
+- Local polling scripts check delta every few seconds
+- Scripts update `reported` state after acting on `delta`
 
 ---
-### 📜 License
-This project is for educational purposes only. No license required.
+
+## 🙌 Contributors
+
+- Albert Wang（王建葦） – System Design, Backend Integration
+- Andy Chean（陳稚翔） – Frontend UI & API Integration
+
+---
+
+## 📜 License
+
+This project is for educational use only. No license required.
