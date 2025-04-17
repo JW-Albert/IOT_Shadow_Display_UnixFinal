@@ -107,6 +107,7 @@
       window.onload = () => {
         fetchStatus();
         initPermissionSwitch();
+        setInterval(fetchStatus, 2000); // 每 2 秒輪詢 status
       };
     </script>
   </body>
