@@ -1,115 +1,166 @@
 <!DOCTYPE html>
 <html lang="zh-tw">
 
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>中控室設備控制面板</title>
-    <style>
-      body {
-        font-family: 'Segoe UI', sans-serif;
-        background: #f3f3f3;
-        padding: 20px;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中控室設備控制面板</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f3f3f3;
+      padding: 20px;
+    }
 
-      .container {
-        max-width: 600px;
-        margin: auto;
-        background: #fff;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
 
-      h1 {
-        text-align: center;
-      }
+    h1 {
+      text-align: center;
+    }
 
-      .status-box {
-        text-align: center;
-        margin-bottom: 20px;
-      }
+    .status-box {
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-      .controls button {
-        width: 48%;
-        padding: 10px;
-        margin: 5px 1%;
-        font-size: 16px;
-      }
+    .controls button {
+      width: 48%;
+      padding: 10px;
+      margin: 5px 1%;
+      font-size: 16px;
+    }
 
-      .switch {
-        margin-top: 20px;
-        text-align: center;
-      }
+    .switch {
+      margin-top: 20px;
+      text-align: center;
+    }
 
-      .switch label {
-        font-size: 18px;
-      }
-    </style>
-  </head>
+    .switch label {
+      font-size: 18px;
+    }
 
-  <body>
-    <div class="container">
-      <h1>中控室設備控制面板</h1>
-      <div class="status-box">
-        <h3>設備狀態：<span id="deviceStatus">讀取中...</span></h3>
-      </div>
-      <div class="controls">
-        <button onclick="updateStatus(1)">開啟設備</button>
-        <button onclick="updateStatus(0)">關閉設備</button>
-      </div>
-      <div class="switch">
-        <label for="permissionToggle">允許地端操作：</label>
-        <input type="checkbox" id="permissionToggle" onchange="updatePermission()" />
-      </div>
+    .top-bar {
+      text-align: right;
+      margin-bottom: 10px;
+    }
+
+    .top-bar span {
+      font-weight: bold;
+    }
+
+    .top-bar a {
+      margin-left: 10px;
+      color: #007BFF;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="top-bar">
+      使用者：<span id="username">讀取中...</span>
+      <a onclick="logout()">登出</a>
     </div>
 
-    <script>
-      const apiBase = "/api/shadow"; // Apache 反向代理自動加 Authorization
+    <h1>中控室設備控制面板</h1>
 
-      async function fetchStatus() {
-        const res = await fetch(`${apiBase}/get?type=reported`);
+    <div class="status-box">
+      <h3>設備狀態：<span id="deviceStatus">讀取中...</span></h3>
+    </div>
+
+    <div class="controls">
+      <button onclick="updateStatus(1)">開啟設備</button>
+      <button onclick="updateStatus(0)">關閉設備</button>
+    </div>
+
+    <div class="switch">
+      <label for="permissionToggle">允許地端操作：</label>
+      <input type="checkbox" id="permissionToggle" onchange="updatePermission()" />
+    </div>
+  </div>
+
+  <script>
+    const apiBase = "/api/shadow";
+
+    async function getUserInfo() {
+      try {
+        const res = await fetch("/authapi/whoami");
+        if (res.status !== 200) {
+          window.location.href = "/login.html";
+          return;
+        }
         const data = await res.json();
-        const status = data.status === 1 ? '開啟' : '關閉';
-        document.getElementById("deviceStatus").innerText = status;
-      }
+        document.getElementById("username").innerText = data.username;
+        window.userRole = data.role;
 
-      async function updateStatus(value) {
-        await fetch(`${apiBase}/update`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: "desired",
-            data: { status: value }
-          })
-        });
-        fetchStatus();
+        // 非 admin 禁用權限開關
+        if (data.role !== "admin") {
+          document.getElementById("permissionToggle").disabled = true;
+        }
+      } catch (err) {
+        window.location.href = "/login.html";
       }
+    }
 
-      async function updatePermission() {
-        const value = document.getElementById("permissionToggle").checked ? 1 : 0;
-        await fetch(`${apiBase}/update`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: "desired",
-            data: { permission: value }
-          })
-        });
-      }
+    function logout() {
+      document.cookie = "token=; Max-Age=0; path=/";
+      window.location.href = "/login.html";
+    }
 
-      async function initPermissionSwitch() {
-        const res = await fetch(`${apiBase}/get?type=desired`);
-        const data = await res.json();
-        document.getElementById("permissionToggle").checked = data.permission === 1;
-      }
+    async function fetchStatus() {
+      const res = await fetch(`${apiBase}/get?type=reported`);
+      const data = await res.json();
+      const status = data.status === 1 ? '開啟' : '關閉';
+      document.getElementById("deviceStatus").innerText = status;
+    }
 
-      window.onload = () => {
-        fetchStatus();
-        initPermissionSwitch();
-        setInterval(fetchStatus, 2000); // 每 2 秒輪詢 status
-      };
-    </script>
-  </body>
+    async function updateStatus(value) {
+      await fetch(`${apiBase}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: "desired",
+          data: { status: value }
+        })
+      });
+      fetchStatus();
+    }
+
+    async function updatePermission() {
+      if (window.userRole !== "admin") return;
+      const value = document.getElementById("permissionToggle").checked ? 1 : 0;
+      await fetch(`${apiBase}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: "desired",
+          data: { permission: value }
+        })
+      });
+    }
+
+    async function initPermissionSwitch() {
+      const res = await fetch(`${apiBase}/get?type=desired`);
+      const data = await res.json();
+      document.getElementById("permissionToggle").checked = data.permission === 1;
+    }
+
+    window.onload = () => {
+      getUserInfo();
+      fetchStatus();
+      initPermissionSwitch();
+      setInterval(fetchStatus, 2000); // 每 2 秒輪詢設備狀態
+    };
+  </script>
+</body>
 
 </html>
