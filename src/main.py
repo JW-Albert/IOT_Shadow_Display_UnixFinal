@@ -10,7 +10,8 @@ SHADOW_FILE = os.path.join(os.path.dirname(__file__), '../shadow/shadow.json')
 # 簡易固定 token 對照表（未來可對接 authapi）
 TOKENS = {
     "admin-token-123": "admin",
-    "user-token-456": "user"
+    "user-token-456": "user" ,
+    "device-token-789": "device"
 }
 
 # === 請求前處理（授權檢查 + 請求日誌） ===
