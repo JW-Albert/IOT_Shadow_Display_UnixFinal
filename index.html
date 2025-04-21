@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-tw">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -28,6 +27,11 @@
     .status-box {
       text-align: center;
       margin-bottom: 20px;
+    }
+
+    .status-box.offline span {
+      color: red;
+      font-weight: bold;
     }
 
     .controls button {
@@ -63,7 +67,6 @@
     }
   </style>
 </head>
-
 <body>
   <div class="container">
     <div class="top-bar">
@@ -73,7 +76,7 @@
 
     <h1>中控室設備控制面板</h1>
 
-    <div class="status-box">
+    <div class="status-box" id="statusBox">
       <h3>設備狀態：<span id="deviceStatus">讀取中...</span></h3>
     </div>
 
@@ -101,8 +104,6 @@
         const data = await res.json();
         document.getElementById("username").innerText = data.username;
         window.userRole = data.role;
-
-        // 非 admin 禁用權限開關
         if (data.role !== "admin") {
           document.getElementById("permissionToggle").disabled = true;
         }
@@ -117,50 +118,69 @@
     }
 
     async function fetchStatus() {
-      const res = await fetch(`${apiBase}/get?type=reported`);
-      const data = await res.json();
-      const status = data.status === 1 ? '開啟' : '關閉';
-      document.getElementById("deviceStatus").innerText = status;
+      try {
+        const res = await fetch(`${apiBase}/get?type=reported`);
+        if (!res.ok) throw new Error("Shadow API 錯誤");
+        const data = await res.json();
+        const status = data.status === 1 ? '開啟' : '關閉';
+        document.getElementById("deviceStatus").innerText = status;
+        document.getElementById("statusBox").classList.remove("offline");
+      } catch (err) {
+        document.getElementById("deviceStatus").innerText = "離線";
+        document.getElementById("statusBox").classList.add("offline");
+      }
     }
 
     async function updateStatus(value) {
-      await fetch(`${apiBase}/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: "desired",
-          data: { status: value }
-        })
-      });
-      fetchStatus();
+      try {
+        await fetch(`${apiBase}/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: "desired",
+            data: { status: value }
+          })
+        });
+        fetchStatus();
+      } catch (err) {
+        alert("無法連線至 Shadow API，請稍後再試。");
+      }
     }
 
     async function updatePermission() {
       if (window.userRole !== "admin") return;
       const value = document.getElementById("permissionToggle").checked ? 1 : 0;
-      await fetch(`${apiBase}/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: "desired",
-          data: { permission: value }
-        })
-      });
+      try {
+        await fetch(`${apiBase}/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: "desired",
+            data: { permission: value }
+          })
+        });
+      } catch (err) {
+        alert("無法修改地端權限（API 連線失敗）");
+      }
     }
 
     async function initPermissionSwitch() {
-      const res = await fetch(`${apiBase}/get?type=desired`);
-      const data = await res.json();
-      document.getElementById("permissionToggle").checked = data.permission === 1;
+      try {
+        const res = await fetch(`${apiBase}/get?type=desired`);
+        if (!res.ok) throw new Error("fail");
+        const data = await res.json();
+        document.getElementById("permissionToggle").checked = data.permission === 1;
+      } catch (err) {
+        document.getElementById("permissionToggle").disabled = true;
+      }
     }
 
     window.onload = () => {
       getUserInfo();
       fetchStatus();
       initPermissionSwitch();
-      setInterval(fetchStatus, 2000); // 每 2 秒輪詢設備狀態
+      setInterval(fetchStatus, 2000);
     };
   </script>
 </body>
-
 </html>
