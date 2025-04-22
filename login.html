@@ -75,10 +75,11 @@
       const password = document.getElementById("password").value;
 
       try {
-        const res = await fetch("/authapi/login", {
+        const res = await fetch("https://unix.jw-albert.dev/authapi/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ username, password }),
+          credentials: "include"
         });
 
         if (res.status === 200) {
