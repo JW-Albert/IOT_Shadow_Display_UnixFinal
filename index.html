@@ -1,186 +1,172 @@
 <!DOCTYPE html>
 <html lang="zh-tw">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>中控室設備控制面板</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f3f3f3;
-      padding: 20px;
-    }
+	<head>
+	  <meta charset="UTF-8" />
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	  <title>中控室設備控制面板</title>
+	  <style>
+		body {
+		  font-family: 'Segoe UI', sans-serif;
+		  background: #f3f3f3;
+		  padding: 20px;
+		}
+		.container {
+		  max-width: 600px;
+		  margin: auto;
+		  background: #fff;
+		  padding: 30px;
+		  border-radius: 12px;
+		  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+		}
+		h1 { text-align: center; }
+		.status-box {
+		  text-align: center;
+		  margin-bottom: 20px;
+		}
+		.status-box.offline span {
+		  color: red;
+		  font-weight: bold;
+		}
+		.controls button {
+		  width: 48%;
+		  padding: 10px;
+		  margin: 5px 1%;
+		  font-size: 16px;
+		}
+		.switch {
+		  margin-top: 20px;
+		  text-align: center;
+		}
+		.switch label {
+		  font-size: 18px;
+		}
+		.top-bar {
+		  text-align: right;
+		  margin-bottom: 10px;
+		}
+		.top-bar span {
+		  font-weight: bold;
+		}
+		.top-bar a {
+		  margin-left: 10px;
+		  color: #007BFF;
+		  cursor: pointer;
+		  text-decoration: underline;
+		}
+	  </style>
+	</head>
+	<body>
+	  <div class="container">
+		<div class="top-bar">
+		  使用者：<span id="username">讀取中...</span>
+		  <a onclick="logout()">登出</a>
+		</div>
+		<h1>中控室設備控制面板</h1>
+		<div class="status-box" id="statusBox">
+		  <h3>設備狀態：<span id="deviceStatus">讀取中...</span></h3>
+		</div>
+		<div class="controls">
+		  <button onclick="updateStatus(1)">開啟設備</button>
+		  <button onclick="updateStatus(0)">關閉設備</button>
+		</div>
+		<div class="switch">
+		  <label for="permissionToggle">允許地端操作：</label>
+		  <input type="checkbox" id="permissionToggle" onchange="updatePermission()" />
+		</div>
+	  </div>
+	  <script>
+		const apiBase = "https://unix.jw-albert.dev/api/shadow";
+		const authapiBase = "https://unix.jw-albert.dev/authapi";
 
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
+		async function getUserInfo() {
+		  try {
+			const res = await fetch(`${authapiBase}/whoami`, { credentials: "include" });
+			if (res.status !== 200) {
+			  window.location.href = "/login.html";
+			  return;
+			}
+			const data = await res.json();
+			document.getElementById("username").innerText = data.username;
+			window.userRole = data.role;
+			if (data.role !== "admin") {
+			  document.getElementById("permissionToggle").disabled = true;
+			}
+		  } catch (err) {
+			window.location.href = "/login.html";
+		  }
+		}
 
-    h1 {
-      text-align: center;
-    }
+		function logout() {
+		  document.cookie = "token=; Max-Age=0; path=/";
+		  window.location.href = "/login.html";
+		}
 
-    .status-box {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+		async function fetchStatus() {
+		  try {
+			const res = await fetch(`${apiBase}/get?type=reported`, { credentials: "include" });
+			if (!res.ok) throw new Error("Shadow API 錯誤");
+			const data = await res.json();
+			const status = data.status === 1 ? '開啟' : '關閉';
+			document.getElementById("deviceStatus").innerText = status;
+			document.getElementById("statusBox").classList.remove("offline");
+		  } catch (err) {
+			document.getElementById("deviceStatus").innerText = "離線";
+			document.getElementById("statusBox").classList.add("offline");
+		  }
+		}
 
-    .status-box.offline span {
-      color: red;
-      font-weight: bold;
-    }
+		async function updateStatus(value) {
+		  try {
+			await fetch(`${apiBase}/update`, {
+			  method: 'POST',
+			  headers: { 'Content-Type': 'application/json' },
+			  body: JSON.stringify({
+				type: "desired",
+				data: { status: value }
+			  }),
+			  credentials: "include"
+			});
+			fetchStatus();
+		  } catch (err) {
+			alert("無法連線至 Shadow API，請稍後再試。");
+		  }
+		}
 
-    .controls button {
-      width: 48%;
-      padding: 10px;
-      margin: 5px 1%;
-      font-size: 16px;
-    }
+		async function updatePermission() {
+		  if (window.userRole !== "admin") return;
+		  const value = document.getElementById("permissionToggle").checked ? 1 : 0;
+		  try {
+			await fetch(`${apiBase}/update`, {
+			  method: 'POST',
+			  headers: { 'Content-Type': 'application/json' },
+			  body: JSON.stringify({
+				type: "desired",
+				data: { permission: value }
+			  }),
+			  credentials: "include"
+			});
+		  } catch (err) {
+			alert("無法修改地端權限（API 連線失敗）");
+		  }
+		}
 
-    .switch {
-      margin-top: 20px;
-      text-align: center;
-    }
+		async function initPermissionSwitch() {
+		  try {
+			const res = await fetch(`${apiBase}/get?type=desired`, { credentials: "include" });
+			if (!res.ok) throw new Error("fail");
+			const data = await res.json();
+			document.getElementById("permissionToggle").checked = data.permission === 1;
+		  } catch (err) {
+			document.getElementById("permissionToggle").disabled = true;
+		  }
+		}
 
-    .switch label {
-      font-size: 18px;
-    }
-
-    .top-bar {
-      text-align: right;
-      margin-bottom: 10px;
-    }
-
-    .top-bar span {
-      font-weight: bold;
-    }
-
-    .top-bar a {
-      margin-left: 10px;
-      color: #007BFF;
-      cursor: pointer;
-      text-decoration: underline;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="top-bar">
-      使用者：<span id="username">讀取中...</span>
-      <a onclick="logout()">登出</a>
-    </div>
-
-    <h1>中控室設備控制面板</h1>
-
-    <div class="status-box" id="statusBox">
-      <h3>設備狀態：<span id="deviceStatus">讀取中...</span></h3>
-    </div>
-
-    <div class="controls">
-      <button onclick="updateStatus(1)">開啟設備</button>
-      <button onclick="updateStatus(0)">關閉設備</button>
-    </div>
-
-    <div class="switch">
-      <label for="permissionToggle">允許地端操作：</label>
-      <input type="checkbox" id="permissionToggle" onchange="updatePermission()" />
-    </div>
-  </div>
-
-  <script>
-    const apiBase = "/api/shadow";
-
-    async function getUserInfo() {
-      try {
-        const res = await fetch("/authapi/whoami");
-        if (res.status !== 200) {
-          window.location.href = "/login.html";
-          return;
-        }
-        const data = await res.json();
-        document.getElementById("username").innerText = data.username;
-        window.userRole = data.role;
-        if (data.role !== "admin") {
-          document.getElementById("permissionToggle").disabled = true;
-        }
-      } catch (err) {
-        window.location.href = "/login.html";
-      }
-    }
-
-    function logout() {
-      document.cookie = "token=; Max-Age=0; path=/";
-      window.location.href = "/login.html";
-    }
-
-    async function fetchStatus() {
-      try {
-        const res = await fetch(`${apiBase}/get?type=reported`);
-        if (!res.ok) throw new Error("Shadow API 錯誤");
-        const data = await res.json();
-        const status = data.status === 1 ? '開啟' : '關閉';
-        document.getElementById("deviceStatus").innerText = status;
-        document.getElementById("statusBox").classList.remove("offline");
-      } catch (err) {
-        document.getElementById("deviceStatus").innerText = "離線";
-        document.getElementById("statusBox").classList.add("offline");
-      }
-    }
-
-    async function updateStatus(value) {
-      try {
-        await fetch(`${apiBase}/update`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: "desired",
-            data: { status: value }
-          })
-        });
-        fetchStatus();
-      } catch (err) {
-        alert("無法連線至 Shadow API，請稍後再試。");
-      }
-    }
-
-    async function updatePermission() {
-      if (window.userRole !== "admin") return;
-      const value = document.getElementById("permissionToggle").checked ? 1 : 0;
-      try {
-        await fetch(`${apiBase}/update`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: "desired",
-            data: { permission: value }
-          })
-        });
-      } catch (err) {
-        alert("無法修改地端權限（API 連線失敗）");
-      }
-    }
-
-    async function initPermissionSwitch() {
-      try {
-        const res = await fetch(`${apiBase}/get?type=desired`);
-        if (!res.ok) throw new Error("fail");
-        const data = await res.json();
-        document.getElementById("permissionToggle").checked = data.permission === 1;
-      } catch (err) {
-        document.getElementById("permissionToggle").disabled = true;
-      }
-    }
-
-    window.onload = () => {
-      getUserInfo();
-      fetchStatus();
-      initPermissionSwitch();
-      setInterval(fetchStatus, 2000);
-    };
-  </script>
-</body>
+		window.onload = () => {
+		  getUserInfo();
+		  fetchStatus();
+		  initPermissionSwitch();
+		  setInterval(fetchStatus, 2000);
+		};
+	  </script>
+	</body>
 </html>
