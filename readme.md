@@ -26,18 +26,33 @@ This frontend interface is part of the IOT_Shadow_Display_UnixFinal project. It 
 
 ## 🛠️ How to Use
 
-1. Open `index.html` and configure your settings:
+1. **Apache Server Setup**
+   - Enable required Apache modules:
+     ```bash
+     sudo a2enmod proxy
+     sudo a2enmod proxy_http
+     ```
+   - Configure SSL virtual host (www-le-ssl.conf):
+     ```apache
+     ProxyPreserveHost On
+     ProxyPass "/api/" "http://127.0.0.1:5000/"
+     ProxyPassReverse "/api/" "http://127.0.0.1:5000/"
+     ProxyPass "/authapi/" "http://127.0.0.1:6000/"
+     ProxyPassReverse "/authapi/" "http://127.0.0.1:6000/"
+     ```
+
+2. Open `index.html` and configure your settings:
 
 ```js
 const apiKey = "your-api-key";               // Replace with your backend Authorization key
 const apiBase = "http://your-api-host:5000"; // Replace with your Flask API host
 ```
 
-2. Deploy `index.html` on any web server:
+3. Deploy `index.html` on any web server:
    - Apache2 (`/var/www/html/index.html`)
    - Or simply open with a local browser
 
-3. Upon loading, the page will:
+4. Upon loading, the page will:
    - Automatically fetch and display the current device status
    - Apply the current `permission` state
 

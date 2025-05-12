@@ -26,18 +26,33 @@
 
 ## 🛠️ 使用方式
 
-1. 修改 `index.html` 中的設定：
+1. **Apache 伺服器設定**
+   - 啟用必要的 Apache 模組：
+     ```bash
+     sudo a2enmod proxy
+     sudo a2enmod proxy_http
+     ```
+   - 設定 SSL 虛擬主機 (www-le-ssl.conf)：
+     ```apache
+     ProxyPreserveHost On
+     ProxyPass "/api/" "http://127.0.0.1:5000/"
+     ProxyPassReverse "/api/" "http://127.0.0.1:5000/"
+     ProxyPass "/authapi/" "http://127.0.0.1:6000/"
+     ProxyPassReverse "/authapi/" "http://127.0.0.1:6000/"
+     ```
+
+2. 修改 `index.html` 中的設定：
 
 ```js
 const apiKey = "your-api-key";               // 替換為後端的 Authorization 金鑰
 const apiBase = "http://your-api-host:5000"; // 替換為後端主機位址
 ```
 
-2. 部署 index.html 至任何靜態網頁伺服器，例如：
+3. 部署 index.html 至任何靜態網頁伺服器，例如：
    - Apache2 (`/var/www/html/index.html`)
    - 本機開啟：用瀏覽器直接開啟 html 檔
 
-3. 開啟網頁後，將自動：
+4. 開啟網頁後，將自動：
    - 顯示目前設備狀態
    - 讀取並套用 permission 狀態
 
