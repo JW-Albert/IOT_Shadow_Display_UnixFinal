@@ -1,101 +1,116 @@
 <!DOCTYPE html>
 <html lang="zh-tw">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>登入 - 中控室系統</title>
-    <style>
-      body {
-        font-family: 'Segoe UI', sans-serif;
-        background: #eef2f7;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-      }
-  
-      .login-box {
-        background: white;
-        padding: 40px;
-        border-radius: 12px;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        width: 100%;
-        max-width: 400px;
-      }
-  
-      h2 {
-        text-align: center;
-        margin-bottom: 20px;
-      }
-  
-      input[type="text"],
-      input[type="password"] {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-        margin-bottom: 20px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-      }
-  
-      button {
-        width: 100%;
-        padding: 10px;
-        background: #007BFF;
-        border: none;
-        color: white;
-        font-size: 16px;
-        border-radius: 8px;
-        cursor: pointer;
-      }
-  
-      button:hover {
-        background: #0056b3;
-      }
-  
-      .error {
-        color: red;
-        text-align: center;
-        display: none;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="login-box">
-      <h2>登入中控系統</h2>
-      <div class="error" id="errorMsg">登入失敗，請確認帳號密碼。</div>
-      <input type="text" id="username" placeholder="使用者名稱" />
-      <input type="password" id="password" placeholder="密碼" />
-      <button onclick="login()">登入</button>
-    </div>
-  
-    <script>
-      async function login() {
-        const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
-  
-        try {
-          const res = await fetch("https://unix.jw-albert.dev/authapi/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
-            credentials: "include"
-          });
-  
-          if (res.status === 200) {
-            window.location.href = "/";
-          } else if (res.status === 404) {
-            document.getElementById("errorMsg").innerText = "認證主機離線，請稍後再試。";
-            document.getElementById("errorMsg").style.display = "block";
-          } else {
-            document.getElementById("errorMsg").innerText = "登入失敗，請確認帳號密碼。";
-            document.getElementById("errorMsg").style.display = "block";
-          }
-        } catch (err) {
-          document.getElementById("errorMsg").innerText = "無法連線至認證主機，請檢查網路狀態。";
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登入 - 中控室系統</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #eef2f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .login-box input[type="text"],
+    .login-box input[type="password"],
+    .login-box button {
+      width: 90%;
+      min-width: 220px;
+      max-width: 350px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007BFF;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-box">
+    <h2>登入中控系統</h2>
+    <div class="error" id="errorMsg">登入失敗，請確認帳號密碼。</div>
+    <input type="text" id="username" placeholder="使用者名稱" />
+    <input type="password" id="password" placeholder="密碼" />
+    <button onclick="login()">登入</button>
+  </div>
+
+  <script>
+    async function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await fetch("https://unix.jw-albert.dev/authapi/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+          credentials: "include"
+        });
+
+        if (res.status === 200) {
+          window.location.href = "/";
+        } else if (res.status === 404) {
+          document.getElementById("errorMsg").innerText = "認證主機離線，請稍後再試。";
+          document.getElementById("errorMsg").style.display = "block";
+        } else {
+          document.getElementById("errorMsg").innerText = "登入失敗，請確認帳號密碼。";
           document.getElementById("errorMsg").style.display = "block";
         }
+      } catch (err) {
+        document.getElementById("errorMsg").innerText = "無法連線至認證主機，請檢查網路狀態。";
+        document.getElementById("errorMsg").style.display = "block";
       }
-    </script>
-  </body>
+    }
+  </script>
+</body>
+
 </html>
