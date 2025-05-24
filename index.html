@@ -1,371 +1,467 @@
 <!DOCTYPE html>
 <html lang="zh-tw">
 
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>中控室設備控制面板</title>
-        <style>
-            html,
-            body {
-                height: 100%;
-                margin: 0;
-                padding: 0;
-            }
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>中控室設備控制面板</title>
+    <style>
+        /* Base styles */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
 
-            body {
-                min-height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: #f3f3f3;
-            }
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f3f3;
+        }
 
-            .container {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                background: #fff;
-                padding: 48px 40px 40px 40px;
-                border-radius: 40px;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                min-width: 700px;
-                min-height: 500px;
-                position: relative;
-                width: 100%;
-                max-width: 1100px;
-                margin: auto;
-            }
+        /* Main container layout */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            padding: 48px 40px 40px 40px;
+            border-radius: 40px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            min-width: 700px;
+            min-height: 500px;
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            margin: auto;
+        }
 
-            .content-row {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 16px;
-                width: fit-content;
-                margin: 0 auto;
-            }
+        /* Content layout */
+        .content-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            width: fit-content;
+            margin: 0 auto;
+        }
 
-            .device-image {
-                width: 180px;
-                height: 250px;
-                background: #156884;
-                border-radius: 40px;
-                margin-left: 0;
-                flex-shrink: 0;
-                border: 2px solid #0e4254;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                overflow: hidden;
-            }
+        /* Device image container */
+        .device-image {
+            width: 180px;
+            height: 250px;
+            background: #156884;
+            border-radius: 40px;
+            margin-left: 0;
+            flex-shrink: 0;
+            border: 2px solid #0e4254;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
 
-            .device-image img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                border-radius: 40px;
-            }
+        .device-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 40px;
+        }
 
-            .top-bar {
-                position: absolute;
-                top: 30px;
-                right: 40px;
-                text-align: right;
-                margin: 0;
-                font-size: 18px;
-                z-index: 2;
-            }
+        /* Top bar with user info */
+        .top-bar {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            text-align: right;
+            margin: 0;
+            font-size: 18px;
+            z-index: 2;
+        }
 
-            .top-bar span {
-                font-weight: bold;
-            }
+        .top-bar span {
+            font-weight: bold;
+        }
 
-            .top-bar a {
-                margin-left: 10px;
-                color: #007BFF;
-                cursor: pointer;
-                text-decoration: underline;
-            }
+        .top-bar a {
+            margin-left: 10px;
+            color: #007BFF;
+            cursor: pointer;
+            text-decoration: underline;
+        }
 
-            .panel {
-                width: 360px;
-                height: 300px;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                padding: 32px 32px;
-                box-sizing: border-box;
-                background: transparent;
-                position: relative;
-            }
+        /* Control panel */
+        .panel {
+            width: 360px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 32px 32px;
+            box-sizing: border-box;
+            background: transparent;
+            position: relative;
+        }
 
-            h1 {
-                text-align: center;
-                font-size: 36px;
-                margin: 0 0 40px 0;
-                width: 100%;
-                z-index: 1;
-            }
+        /* Typography */
+        h1 {
+            text-align: center;
+            font-size: 36px;
+            margin: 0 0 40px 0;
+            width: 100%;
+            z-index: 1;
+        }
 
-            .status-box {
-                text-align: center;
-                margin-bottom: 28px;
-                font-size: 20px;
-                width: 100%;
-            }
+        /* Status display */
+        .status-box {
+            text-align: center;
+            margin-bottom: 28px;
+            font-size: 20px;
+            width: 100%;
+        }
 
-            .status-box.offline span {
-                color: red;
-                font-weight: bold;
-            }
+        .status-box.offline span {
+            color: red;
+            font-weight: bold;
+        }
 
-            .controls {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 20px;
-                margin: 20px 0;
-            }
+        /* Control elements */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
 
-            .switch-row {
-                display: flex;
-                flex-direction: column;
-                gap: 24px;
-                align-items: center;
-                width: 100%;
-            }
+        .switch-row {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            align-items: center;
+            width: 100%;
+        }
 
-            .switch-container {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-            .switch-label {
-                font-size: 18px;
-                margin-right: 10px;
-                display: inline-block;
-            }
+        .switch-label {
+            font-size: 18px;
+            margin-right: 10px;
+            display: inline-block;
+        }
 
-            /* Toggle Switch Styles */
-            .toggle-switch {
-                position: relative;
-                display: inline-block;
-                width: 60px;
-                height: 34px;
-            }
+        /* Toggle switch styles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
 
-            .toggle-switch input {
-                opacity: 0;
-                width: 0;
-                height: 0;
-            }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
 
-            .slider {
-                position: absolute;
-                cursor: pointer;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: #ccc;
-                transition: .4s;
-                border-radius: 34px;
-            }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
 
-            .slider:before {
-                position: absolute;
-                content: "";
-                height: 26px;
-                width: 26px;
-                left: 4px;
-                bottom: 4px;
-                background-color: white;
-                transition: .4s;
-                border-radius: 50%;
-            }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
 
-            input:checked+.slider {
-                background-color: #4CAF50;
-            }
+        input:checked+.slider {
+            background-color: #4CAF50;
+        }
 
-            input:disabled+.slider {
-                background-color: #ccc;
-                cursor: not-allowed;
-            }
+        input:disabled+.slider {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
 
-            input:checked+.slider:before {
-                transform: translateX(26px);
-            }
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
 
-            .slider.pending {
-                background-color: #808080;
-            }
+        .slider.pending {
+            background-color: #808080;
+        }
 
-            .slider.off {
-                background-color: #f44336;
-            }
-        </style>
-    </head>
+        .slider.off {
+            background-color: #f44336;
+        }
+    </style>
+</head>
 
-    <body>
-        <div class="container">
-            <div class="top-bar">
-                使用者：<span id="username">讀取中...</span>
-                <a onclick="logout()">登出</a>
+<body>
+    <div class="container">
+        <div class="top-bar">
+            使用者：<span id="username">讀取中...</span>
+            <a onclick="logout()">登出</a>
+        </div>
+        <h1>中控室設備控制面板</h1>
+        <div class="content-row">
+            <div class="device-image">
+                <img src="LED.jpg" alt="設備圖片" />
             </div>
-            <h1>中控室設備控制面板</h1>
-            <div class="content-row">
-                <div class="device-image">
-                    <img src="LED.jpg" alt="設備圖片" />
+            <div class="panel">
+                <div class="status-box" id="statusBox">
+                    <h3>設備狀態：<span id="deviceStatus">讀取中...</span></h3>
                 </div>
-                <div class="panel">
-                    <div class="status-box" id="statusBox">
-                        <h3>設備狀態：<span id="deviceStatus">讀取中...</span></h3>
+                <div class="switch-row">
+                    <div class="switch-container">
+                        <span class="switch-label">設備控制：</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="deviceToggle" onchange="updateDeviceStatus()" />
+                            <span class="slider"></span>
+                        </label>
                     </div>
-                    <div class="switch-row">
-                        <div class="switch-container">
-                            <span class="switch-label">設備控制：</span>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="deviceToggle" onchange="updateDeviceStatus()" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="switch-container">
-                            <label for="permissionToggle" class="switch-label">地端權限：</label>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="permissionToggle" disabled />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
+                    <div class="switch-container">
+                        <label for="permissionToggle" class="switch-label">地端權限：</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="permissionToggle" onchange="updatePermission()" />
+                            <span class="slider"></span>
+                        </label>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <script>
-            const apiBase = "https://unix.jw-albert.dev/api/shadow";
-            const authapiBase = "https://unix.jw-albert.dev/authapi";
-            let permissionTimeout = null;
-            let deviceTimeout = null;
+    <script>
+        // API endpoints
+        const apiBase = "https://unix.jw-albert.dev/api/shadow";
+        const authapiBase = "https://unix.jw-albert.dev/authapi";
 
-            async function getUserInfo() {
-                try {
-                    const res = await fetch(`${authapiBase}/whoami`, { credentials: "include" });
-                    if (res.status !== 200) {
-                        window.location.href = "/login.html";
-                        return;
-                    }
-                    const data = await res.json();
-                    document.getElementById("username").innerText = data.username;
-                    window.userRole = data.role;
-                } catch (err) {
+        // Timeout handlers
+        let permissionTimeout = null;
+        let deviceTimeout = null;
+
+        /**
+         * 獲取當前用戶信息
+         * 如果未登入則重定向到登入頁面
+         */
+        async function getUserInfo() {
+            try {
+                const res = await fetch(`${authapiBase}/whoami`, { credentials: "include" });
+                if (res.status !== 200) {
                     window.location.href = "/login.html";
+                    return;
                 }
-            }
-
-            function logout() {
-                document.cookie = "token=; Max-Age=0; path=/";
+                const data = await res.json();
+                document.getElementById("username").innerText = data.username;
+                window.userRole = data.role;
+            } catch (err) {
                 window.location.href = "/login.html";
             }
+        }
 
-            async function fetchStatus() {
-                try {
-                    const res = await fetch(`${apiBase}/get?type=reported`, { credentials: "include" });
-                    if (!res.ok) throw new Error("Shadow API 錯誤");
-                    const data = await res.json();
-                    const status = data.status === 1 ? '開啟' : '關閉';
-                    document.getElementById("deviceStatus").innerText = status;
-                    document.getElementById("statusBox").classList.remove("offline");
+        /**
+         * 處理用戶登出
+         */
+        function logout() {
+            document.cookie = "token=; Max-Age=0; path=/";
+            window.location.href = "/login.html";
+        }
 
-                    // Update device toggle state
-                    const deviceToggle = document.getElementById("deviceToggle");
-                    const deviceSlider = deviceToggle.nextElementSibling;
-                    deviceToggle.checked = data.status === 1;
-                    deviceSlider.classList.remove("pending");
-                    deviceSlider.classList.toggle("off", data.status === 0);
-                } catch (err) {
-                    document.getElementById("deviceStatus").innerText = "離線";
-                    document.getElementById("statusBox").classList.add("offline");
-                }
+        /**
+         * 獲取伺服器時間
+         * @returns {Promise<number|null>} 伺服器時間戳（秒）
+         */
+        async function getServerTime() {
+            try {
+                const res = await fetch(`${authapiBase}/servertime`, { credentials: "include" });
+                if (!res.ok) throw new Error("Server time API error");
+                const data = await res.json();
+                return Math.floor(data.unixtime);
+            } catch (err) {
+                console.error("Failed to get server time:", err);
+                return null;
             }
+        }
 
-            async function updateDeviceStatus() {
-                const toggle = document.getElementById("deviceToggle");
-                const slider = toggle.nextElementSibling;
-                const newValue = toggle.checked ? 1 : 0;
+        /**
+         * 獲取並更新設備狀態
+         * 檢查設備是否在線並更新UI
+         */
+        async function fetchStatus() {
+            try {
+                const res = await fetch(`${apiBase}/get?type=reported`, { credentials: "include" });
+                if (!res.ok) throw new Error("Shadow API 錯誤");
+                const data = await res.json();
 
-                slider.classList.add('pending');
-                if (deviceTimeout) clearTimeout(deviceTimeout);
+                const serverTime = await getServerTime();
+                const deviceTime = Math.floor(data.localtime);
+                const isOnline = serverTime && deviceTime && Math.abs(serverTime - deviceTime) <= 60;
 
-                try {
-                    await fetch(`${apiBase}/update`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            type: "desired",
-                            data: { status: newValue }
-                        }),
-                        credentials: "include"
-                    });
+                const status = isOnline ? '上線' : '離線';
+                document.getElementById("deviceStatus").innerText = status;
+                document.getElementById("statusBox").classList.toggle("offline", !isOnline);
 
-                    deviceTimeout = setTimeout(async () => {
-                        try {
-                            const res = await fetch(`${apiBase}/get?type=reported`, { credentials: "include" });
-                            if (!res.ok) throw new Error("Shadow API 錯誤");
-                            const data = await res.json();
+                const deviceToggle = document.getElementById("deviceToggle");
+                const deviceSlider = deviceToggle.nextElementSibling;
 
-                            if (data.status === newValue) {
-                                slider.classList.remove('pending');
-                                slider.classList.toggle("off", newValue === 0);
-                            } else {
-                                toggle.checked = !toggle.checked;
-                                slider.classList.remove('pending');
-                                slider.classList.toggle("off", !toggle.checked);
-                            }
-                        } catch (err) {
+                deviceToggle.checked = data.status === 1;
+                deviceSlider.classList.remove("pending");
+                deviceSlider.classList.toggle("off", data.status === 0);
+
+                const isLocked = data.localper === 1;
+                deviceToggle.disabled = isLocked || !isOnline;
+                deviceToggle.title = isLocked ? "localper=1，無法操作設備" : (!isOnline ? "設備離線，無法操作" : "");
+                deviceSlider.style.cursor = (isLocked || !isOnline) ? "not-allowed" : "pointer";
+
+            } catch (err) {
+                document.getElementById("deviceStatus").innerText = "離線";
+                document.getElementById("statusBox").classList.add("offline");
+            }
+        }
+
+        /**
+         * 更新設備狀態
+         * 發送狀態更新請求並處理響應
+         */
+        async function updateDeviceStatus() {
+            const toggle = document.getElementById("deviceToggle");
+            const slider = toggle.nextElementSibling;
+            const newValue = toggle.checked ? 1 : 0;
+
+            slider.classList.add('pending');
+            if (deviceTimeout) clearTimeout(deviceTimeout);
+
+            try {
+                await fetch(`${apiBase}/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: "desired",
+                        data: { status: newValue }
+                    }),
+                    credentials: "include"
+                });
+
+                deviceTimeout = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`${apiBase}/get?type=reported`, { credentials: "include" });
+                        if (!res.ok) throw new Error("Shadow API 錯誤");
+                        const data = await res.json();
+
+                        if (data.status === newValue) {
+                            slider.classList.remove('pending');
+                            slider.classList.toggle("off", newValue === 0);
+                        } else {
                             toggle.checked = !toggle.checked;
                             slider.classList.remove('pending');
                             slider.classList.toggle("off", !toggle.checked);
                         }
-                    }, 5000);
+                    } catch (err) {
+                        toggle.checked = !toggle.checked;
+                        slider.classList.remove('pending');
+                        slider.classList.toggle("off", !toggle.checked);
+                    }
+                }, 5000);
 
-                } catch (err) {
-                    toggle.checked = !toggle.checked;
-                    slider.classList.remove('pending');
-                    slider.classList.toggle("off", !toggle.checked);
-                    alert("無法連線至 Shadow API，請稍後再試。");
+            } catch (err) {
+                toggle.checked = !toggle.checked;
+                slider.classList.remove('pending');
+                slider.classList.toggle("off", !toggle.checked);
+                alert("無法連線至 Shadow API，請稍後再試。");
+            }
+        }
+
+        /**
+         * 獲取地端權限狀態
+         */
+        async function fetchReportedPermission() {
+            try {
+                const res = await fetch(`${apiBase}/get?type=reported`, { credentials: "include" });
+                if (!res.ok) throw new Error("失敗");
+                const data = await res.json();
+
+                const toggle = document.getElementById("permissionToggle");
+                const isAdmin = window.userRole === "admin";
+                const isLocked = data.localper === 1;
+
+                toggle.checked = data.permission === 1;
+                toggle.disabled = !isAdmin || isLocked;
+
+                if (!isAdmin) {
+                    toggle.title = "僅限 admin 可操作";
+                } else if (isLocked) {
+                    toggle.title = "localper=1，禁止操作";
+                } else {
+                    toggle.title = "點擊切換地端權限";
                 }
-            }
 
-            // ✅ 僅顯示地端「實際」回報狀態，不可控制
-            async function fetchReportedPermission() {
-                try {
-                    const res = await fetch(`${apiBase}/get?type=reported`, { credentials: "include" });
-                    if (!res.ok) throw new Error("失敗");
-                    const data = await res.json();
-                    const toggle = document.getElementById("permissionToggle");
-                    toggle.checked = data.permission === 1;
-                    toggle.title = "地端目前權限狀態：" + (data.permission === 1 ? "允許" : "禁止");
-                } catch (err) {
-                    console.warn("無法取得地端權限狀態");
-                }
+            } catch (err) {
+                console.warn("無法取得地端權限狀態");
             }
+        }
 
-            // ✅ 僅同步 UI 狀態（若仍要保留 admin 權限可選用此邏輯）
-            async function initPermissionSwitch() {
-                // 已取消：不主動寫入任何值，僅顯示 desired 狀態（可移除）
+        /**
+         * 更新地端權限
+         */
+        async function updatePermission() {
+            const toggle = document.getElementById("permissionToggle");
+            const newValue = toggle.checked ? 1 : 0;
+
+            toggle.disabled = true;
+
+            try {
+                const res = await fetch(`${apiBase}/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: "desired",
+                        data: { permission: newValue }
+                    }),
+                    credentials: "include"
+                });
+
+                if (!res.ok) throw new Error("寫入失敗");
+                setTimeout(fetchReportedPermission, 1000);
+            } catch (err) {
+                toggle.checked = !toggle.checked;
+                alert("地端權限寫入失敗！");
+            } finally {
+                toggle.disabled = false;
             }
+        }
 
-            window.onload = () => {
-                getUserInfo();
-                fetchStatus();
-                fetchReportedPermission();  // ✅ 顯示地端實際狀態
-                setInterval(fetchStatus, 2000);
-            };
-        </script>
-    </body>
+        // Initialize application
+        window.onload = () => {
+            getUserInfo();
+            fetchStatus();
+            fetchReportedPermission();
+            setInterval(fetchStatus, 10000);
+        };
+    </script>
+</body>
+
 </html>
