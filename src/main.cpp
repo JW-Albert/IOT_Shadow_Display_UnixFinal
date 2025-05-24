@@ -13,7 +13,7 @@
 #include <time.h>
 
 /* Network Configuration */
-const char *SSID = "iOT";
+const char *SSID = "Albert";
 const char *PASSWORD = "Albert0801";
 
 /* API Endpoints */
