@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, make_response
+import time
 
 app = Flask(__name__)
 
@@ -28,6 +29,10 @@ def whoami():
         if info["token"] == token:
             return jsonify({"username": username, "role": info["role"]})
     return jsonify({"error": "unauthorized"}), 401
+
+@app.route("/servertime")
+def get_server_time():
+    return jsonify(unixtime=int(time.time()))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=6000)
