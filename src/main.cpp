@@ -117,7 +117,9 @@ void setup()
       Serial.println("\nWiFi 已連線");
       Serial.print("IP位址: ");
       Serial.println(WiFi.localIP());
-      client.setInsecure(); // 跳過 HTTPS 驗證（僅限內部使用）
+
+      // 設定 SSL 客戶端
+      client.setInsecure();     // 跳過 HTTPS 驗證（僅限內部使用）
     }
     else
     {
@@ -163,26 +165,23 @@ bool initializeSystem()
         Serial.println();
 
         // 讀取初始設定
-        if (doc.containsKey("cloudEnabled"))
+        if (doc.containsKey("state") && doc["state"].containsKey("desired"))
         {
-          cloudEnabled = doc["cloudEnabled"];
-          Serial.print("雲端控制初始狀態: ");
-          Serial.println(cloudEnabled ? "啟用" : "禁用");
-        }
+          JsonObject desired = doc["state"]["desired"];
+          if (desired.containsKey("permission"))
+          {
+            cloudPermission = desired["permission"];
+            Serial.print("雲給地權限初始狀態: ");
+            Serial.println(cloudPermission);
+          }
 
-        if (doc.containsKey("localAuthEnabled"))
-        {
-          localAuthEnabled = doc["localAuthEnabled"];
-          Serial.print("地端權限初始狀態: ");
-          Serial.println(localAuthEnabled ? "啟用" : "禁用");
-        }
-
-        if (doc.containsKey("deviceStatus"))
-        {
-          deviceStatus = doc["deviceStatus"];
-          Serial.print("裝置初始狀態: ");
-          Serial.println(deviceStatus ? "開啟" : "關閉");
-          digitalWrite(relayPin, deviceStatus ? HIGH : LOW);
+          if (desired.containsKey("status"))
+          {
+            deviceStatus = desired["status"];
+            Serial.print("裝置初始狀態: ");
+            Serial.println(deviceStatus ? "開啟" : "關閉");
+            digitalWrite(relayPin, deviceStatus ? HIGH : LOW);
+          }
         }
       }
       else
@@ -230,7 +229,7 @@ void reportState()
 
   // 直接讀取腳位狀態
   int permission = digitalRead(localAuthPin) ? 1 : 0;
-  String jsonPayload = "{\"type\":\"reported\",\"data\":{\"status\":" + String(deviceStatus ? "1" : "0") + ",\"permission\":" + String(permission) + "}}";
+  String jsonPayload = "{\"type\":\"reported\",\"data\":{\"status\":" + String(deviceStatus ? "1" : "0") + ",\"permission\":" + String(permission) + ",\"localper\":" + String(permission) + "}}";
 
   int httpCode = https.POST(jsonPayload);
   if (httpCode == 200)
@@ -427,8 +426,12 @@ void loop()
         if (doc.containsKey("status"))
         {
           bool cloudControl = doc["status"];
-          updateDeviceStatus(cloudControl);
-          stateChanged = true;
+          // 只有在沒有地端控制時才接受雲端控制
+          if (!localAuthEnabled)
+          {
+            updateDeviceStatus(cloudControl);
+            stateChanged = true;
+          }
         }
 
         // 如果有任何狀態改變，立即回報地端狀態
@@ -440,7 +443,7 @@ void loop()
     }
     https.end();
 
-    // 地端權限開啟時，允許地端控制裝置，並上傳狀態
+    // 地端權限開啟時，優先處理地端控制
     localAuthEnabled = digitalRead(localAuthPin);
     bool localControl = digitalRead(localControlPin);
     if (localAuthEnabled)
@@ -448,8 +451,6 @@ void loop()
       updateDeviceStatus(localControl);
       reportState();
     }
-
-    // 回報當前狀態（雲端模式下）
   }
   else
   {
@@ -461,7 +462,6 @@ void loop()
       updateDeviceStatus(newStatus);
       updateDesiredState(newStatus); // 更新雲端 desired 狀態
     }
-    // 若未接通則不允許地端操作
   }
 
   // 顯示系統狀態
@@ -483,10 +483,6 @@ void loop()
     Serial.print("地端權限: ");
     Serial.println(digitalRead(localAuthPin) ? 1 : 0);
   }
-
-  // 在每次循環結束時顯示繼電器狀態
-  Serial.print("當前繼電器狀態 (GPIO 15): ");
-  Serial.println(digitalRead(relayPin) == HIGH ? "HIGH" : "LOW");
 
   delay(1000); // 每秒檢查一次狀態
 }
