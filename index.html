@@ -319,7 +319,7 @@
 
                 const serverTime = await getServerTime();
                 const deviceTime = Math.floor(data.localtime);
-                const isOnline = serverTime && deviceTime && Math.abs(serverTime - deviceTime) <= 60;
+                const isOnline = serverTime && deviceTime && Math.abs(serverTime - deviceTime) <= 10;
 
                 const status = isOnline ? '上線' : '離線';
                 document.getElementById("deviceStatus").innerText = status;
