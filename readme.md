@@ -1,78 +1,124 @@
 # ESP32S Local Gateway for Device Control
 
-This project uses an ESP32S as a local gateway to control on-premises (local) devices via a cloud-based Shadow API. The ESP32S connects to WiFi, polls the cloud for device state changes (delta), and updates the device status accordingly. It also reports the current device state back to the cloud.
+This project implements a local gateway using ESP32S to control devices through a cloud-based Shadow API. The system supports both cloud and local control modes with priority handling and state synchronization.
 
 ## Features
-- Acts as a local gateway for device control
-- Communicates securely with a cloud Shadow API
-- Polls for device state changes (delta)
-- Controls a local device (e.g., onboard LED)
-- Reports device status (reported) to the cloud
-- Simple configuration for WiFi and authentication token
+- Dual-mode operation (Cloud/Local)
+- Secure communication with cloud Shadow API
+- Real-time device state synchronization
+- Local permission control
+- Cloud permission management
+- Time-based device status monitoring
+- Automatic mode switching
+- Debounced input handling
 
 ## Hardware Requirements
 - ESP32S development board
-- Onboard LED (or external device connected to GPIO2)
+- Input pins:
+  - GPIO 36: Cloud mode switch (ADC input)
+  - GPIO 39: Local permission control (INPUT_PULLUP)
+  - GPIO 34: Local device control (INPUT_PULLUP)
+- Output pins:
+  - GPIO 4: Relay control (OUTPUT)
 
 ## Software Requirements
 - [PlatformIO](https://platformio.org/) or Arduino IDE
-- Arduino libraries:
+- Required libraries:
   - WiFi
   - WiFiClientSecure
   - HTTPClient
-  - ArduinoJson (see `platformio.ini` for version)
+  - ArduinoJson
+  - time.h
 
-## Getting Started
-
-### 1. Clone the Repository
-```bash
-git clone -b LocalGateway_ESP-32S https://github.com/JW-Albert/IOT_Shadow_Display_UnixFinal.git
-cd IOT_Shadow_Display_UnixFinal
-```
-
-### 2. Configure WiFi and Token
-Edit `src/main.cpp` and set your WiFi SSID, password, and device token:
+## Configuration
+Edit `src/main.cpp` to set your network and authentication details:
 ```cpp
-const char* ssid = "YourWiFiSSID";
-const char* password = "YourWiFiPassword";
-const char* token = "your-device-token";
+const char *SSID = "YourWiFiSSID";
+const char *PASSWORD = "YourWiFiPassword";
+const char *TOKEN = "your-device-token";
 ```
 
-### 3. Build and Upload
-Use PlatformIO or Arduino IDE to build and upload the firmware to your ESP32S board.
+## API Endpoints
+- Server Time: `https://unix.jw-albert.dev/authapi/servertime`
+- Shadow Delta: `https://unix.jw-albert.dev/api/shadow/get?type=delta`
+- Shadow Desired: `https://unix.jw-albert.dev/api/shadow/get?type=desired`
+- Shadow Update: `https://unix.jw-albert.dev/api/shadow/update`
 
-### 4. Serial Monitor
-Open the serial monitor at 115200 baud to view logs and debug information.
+## System Operation
 
-## How It Works
-1. **WiFi Connection:** The ESP32S connects to the specified WiFi network.
-2. **Polling Cloud Shadow API:**
-   - Periodically sends a GET request to the Shadow API to fetch the latest device state (delta).
-   - If a new state is received, updates the local device (e.g., turns the LED on/off).
-3. **Reporting State:**
-   - After updating the device, sends a POST request to the Shadow API to report the current state (reported).
-4. **Error Handling:**
-   - Handles WiFi reconnection and HTTP errors gracefully.
+### 1. Initialization
+- System boot and reset information logging
+- GPIO pin configuration
+- Cloud mode detection via ADC input
+- WiFi connection (if in cloud mode)
+- Initial state synchronization
 
-## File Structure
-- `src/main.cpp` — Main application logic
-- `platformio.ini` — PlatformIO project configuration
+### 2. Cloud Mode Operation
+- Maintains WiFi connection
+- Polls for delta updates every 1.5 seconds
+- Reports device state to cloud
+- Handles permission changes
+- Synchronizes with server time
+- Device considered offline if time difference > 10 seconds
 
-## Dependencies
-See `platformio.ini` for library dependencies. Main external library:
-- [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
+### 3. Local Mode Operation
+- Direct GPIO control
+- Local permission management
+- State reporting to cloud (if connected)
+- Automatic mode switching
 
-## Cloud API Endpoints
-- **Get Delta:** `https://unix.jw-albert.dev/api/shadow/get?type=delta`
-- **Update Reported:** `https://unix.jw-albert.dev/api/shadow/update`
+### 4. State Management
+- Device Status (ON/OFF)
+- Cloud Permission (0/1)
+- Local Permission (0/1)
+- Operation Mode (Cloud/Local)
+- Time Synchronization
+
+### 5. Error Handling
+- WiFi reconnection
+- HTTP error recovery
+- Input debouncing (50ms)
+- State verification
+- Automatic fallback to local mode
+
+## Control Flow
+
+### Cloud Control
+1. User updates desired state in cloud
+2. ESP32S polls delta endpoint
+3. System applies changes if permitted
+4. State reported back to cloud
+
+### Local Control
+1. Local permission pin enables control
+2. Control pin directly affects device
+3. State reported to cloud if connected
+4. Cloud control disabled when local permission active
+
+## Debug Information
+- Serial output at 115200 baud
+- System reset tracking
+- State change logging
+- Error reporting
+- Connection status
 
 ## Customization
-- Change the controlled device by modifying the `ledPin` or adding more GPIO logic in `main.cpp`.
-- Adjust polling interval by changing the `delay(2000);` in the main loop.
+- Adjust debounce delay (DEBOUNCE_DELAY)
+- Modify polling interval (default 1.5s)
+- Change GPIO pin assignments
+- Update API endpoints
+- Modify time sync threshold
+
+## Security Features
+- HTTPS communication
+- Token-based authentication
+- Local permission control
+- Cloud permission management
+- Secure WiFi connection
 
 ## License
-Specify your license here (MIT, Apache 2.0, etc.)
+This project is provided for educational purposes only. Free to modify and use in academic projects.
 
 ---
 
-*This project is intended for educational and internal use. For production, ensure proper security and certificate validation.*
+*For production use, ensure proper security measures and certificate validation are implemented.*

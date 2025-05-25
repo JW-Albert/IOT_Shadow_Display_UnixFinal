@@ -1,78 +1,124 @@
 # ESP32S 地端裝置控制本地閘道器
 
-本專案利用 ESP32S 作為本地閘道器，透過雲端 Shadow API 控制地端裝置。ESP32S 連接 WiFi，定期向雲端查詢裝置狀態（delta），並根據狀態更新本地裝置，同時回報目前裝置狀態（reported）至雲端。
+本專案使用 ESP32S 實作本地閘道器，透過雲端 Shadow API 控制裝置。系統支援雲端與本地雙模式運作，具備優先權處理與狀態同步功能。
 
 ## 特色
-- 作為地端裝置控制的本地閘道器
+- 雙模式運作（雲端/本地）
 - 與雲端 Shadow API 安全通訊
-- 定期查詢裝置狀態（delta）
-- 控制本地裝置（如板載 LED）
-- 回報裝置狀態（reported）至雲端
-- WiFi 與驗證 token 設定簡單
+- 即時裝置狀態同步
+- 本地權限控制
+- 雲端權限管理
+- 基於時間的裝置狀態監控
+- 自動模式切換
+- 輸入防彈跳處理
 
 ## 硬體需求
 - ESP32S 開發板
-- 板載 LED（或外接於 GPIO2 的裝置）
+- 輸入腳位：
+  - GPIO 36：雲端模式開關（ADC 輸入）
+  - GPIO 39：本地權限控制（INPUT_PULLUP）
+  - GPIO 34：本地裝置控制（INPUT_PULLUP）
+- 輸出腳位：
+  - GPIO 4：繼電器控制（OUTPUT）
 
 ## 軟體需求
 - [PlatformIO](https://platformio.org/) 或 Arduino IDE
-- Arduino 函式庫：
+- 必要函式庫：
   - WiFi
   - WiFiClientSecure
   - HTTPClient
-  - ArduinoJson（版本請參考 `platformio.ini`）
+  - ArduinoJson
+  - time.h
 
-## 快速開始
-
-### 1. 下載專案原始碼
-```bash
-git clone -b LocalGateway_ESP-32S https://github.com/JW-Albert/IOT_Shadow_Display_UnixFinal.git
-cd IOT_Shadow_Display_UnixFinal
-```
-
-### 2. 設定 WiFi 與 Token
-編輯 `src/main.cpp`，設定您的 WiFi SSID、密碼與裝置 token：
+## 設定
+編輯 `src/main.cpp` 設定網路與認證資訊：
 ```cpp
-const char* ssid = "YourWiFiSSID";
-const char* password = "YourWiFiPassword";
-const char* token = "your-device-token";
+const char *SSID = "您的WiFi名稱";
+const char *PASSWORD = "您的WiFi密碼";
+const char *TOKEN = "您的裝置token";
 ```
 
-### 3. 編譯與燒錄
-使用 PlatformIO 或 Arduino IDE 編譯並燒錄韌體至 ESP32S。
+## API 端點
+- 伺服器時間：`https://unix.jw-albert.dev/authapi/servertime`
+- Shadow Delta：`https://unix.jw-albert.dev/api/shadow/get?type=delta`
+- Shadow Desired：`https://unix.jw-albert.dev/api/shadow/get?type=desired`
+- Shadow Update：`https://unix.jw-albert.dev/api/shadow/update`
 
-### 4. 開啟序列埠監控
-以 115200 baud 開啟序列埠監控，查看日誌與除錯資訊。
+## 系統運作
 
-## 運作方式
-1. **WiFi 連線：** ESP32S 連接指定 WiFi。
-2. **查詢雲端 Shadow API：**
-   - 定期發送 GET 請求至 Shadow API 取得最新裝置狀態（delta）。
-   - 若收到新狀態，則更新本地裝置（如開關 LED）。
-3. **回報狀態：**
-   - 裝置狀態更新後，發送 POST 請求至 Shadow API 回報目前狀態（reported）。
-4. **錯誤處理：**
-   - 自動處理 WiFi 斷線與 HTTP 錯誤。
+### 1. 初始化
+- 系統開機與重置資訊記錄
+- GPIO 腳位配置
+- 透過 ADC 輸入偵測雲端模式
+- WiFi 連線（雲端模式）
+- 初始狀態同步
 
-## 檔案結構
-- `src/main.cpp` — 主程式邏輯
-- `platformio.ini` — PlatformIO 專案設定
+### 2. 雲端模式運作
+- 維持 WiFi 連線
+- 每 1.5 秒輪詢 delta 更新
+- 回報裝置狀態至雲端
+- 處理權限變更
+- 與伺服器時間同步
+- 時間差超過 10 秒判定裝置離線
 
-## 相依套件
-請參考 `platformio.ini`。主要外部函式庫：
-- [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
+### 3. 本地模式運作
+- 直接 GPIO 控制
+- 本地權限管理
+- 狀態回報至雲端（若連線）
+- 自動模式切換
 
-## 雲端 API 端點
-- **取得 Delta：** `https://unix.jw-albert.dev/api/shadow/get?type=delta`
-- **回報 Reported：** `https://unix.jw-albert.dev/api/shadow/update`
+### 4. 狀態管理
+- 裝置狀態（開/關）
+- 雲端權限（0/1）
+- 本地權限（0/1）
+- 運作模式（雲端/本地）
+- 時間同步
+
+### 5. 錯誤處理
+- WiFi 重連
+- HTTP 錯誤恢復
+- 輸入防彈跳（50ms）
+- 狀態驗證
+- 自動切換至本地模式
+
+## 控制流程
+
+### 雲端控制
+1. 使用者在雲端更新期望狀態
+2. ESP32S 輪詢 delta 端點
+3. 系統在允許的情況下套用變更
+4. 狀態回報至雲端
+
+### 本地控制
+1. 本地權限腳位啟用控制
+2. 控制腳位直接影響裝置
+3. 若連線則回報狀態至雲端
+4. 本地權限啟用時停用雲端控制
+
+## 除錯資訊
+- 序列埠輸出（115200 baud）
+- 系統重置追蹤
+- 狀態變更記錄
+- 錯誤回報
+- 連線狀態
 
 ## 客製化
-- 如需控制其他裝置，可修改 `ledPin` 或於 `main.cpp` 增加 GPIO 控制邏輯。
-- 輪詢間隔可調整 `loop` 內的 `delay(2000);`。
+- 調整防彈跳延遲（DEBOUNCE_DELAY）
+- 修改輪詢間隔（預設 1.5 秒）
+- 變更 GPIO 腳位配置
+- 更新 API 端點
+- 修改時間同步閾值
+
+## 安全功能
+- HTTPS 通訊
+- Token 認證
+- 本地權限控制
+- 雲端權限管理
+- 安全 WiFi 連線
 
 ## 授權
-請於此處標註您的授權條款（如 MIT、Apache 2.0 等）。
+本專案僅供教育用途。允許自由修改與應用於學術專案。
 
 ---
 
-*本專案僅供教育與內部使用。若用於正式環境，請務必加強安全性與憑證驗證。*
+*若用於正式環境，請確保實作適當的安全措施與憑證驗證。*
