@@ -1,25 +1,60 @@
 ## 中文版說明
 - https://github.com/JW-Albert/IOT_Shadow_Display_UnixFinal/tree/Shadow/readme_zh-tw.md
 
-# Shadow System Explanation
+# Shadow System Implementation
 
-In this project, the Shadow system simulates the AWS IoT Device Shadow, managing the state synchronization between a central control interface (frontend), a local gateway (edge device), and the physical device.
+This is a Flask-based implementation of a device shadow system, similar to AWS IoT Device Shadow. It manages device states and permissions through a RESTful API.
 
----
+## Features
+- Device state management (desired/reported/delta)
+- Role-based access control
+- Permission management
+- JSON file-based storage
+- RESTful API endpoints
 
-## What is a Shadow?
+## API Endpoints
 
-A shadow is a virtual representation of a device's state in the system. It stores the desired state, the reported state, and the delta (difference).
+### Shadow Management
+- **GET /shadow/get**
+  - Query Parameters:
+    - `type`: "desired", "reported", "delta", or "full"
+  - Returns the requested shadow state
+  - Example Response:
+    ```json
+    {
+      "status": 1,
+      "permission": 1
+    }
+    ```
 
----
+- **POST /shadow/update**
+  - Updates shadow state
+  - Request Body:
+    ```json
+    {
+      "type": "desired",
+      "data": {
+        "status": 1,
+        "permission": 1
+      }
+    }
+    ```
+  - Response:
+    ```json
+    {
+      "message": "desired updated",
+      "delta": {
+        "status": 1
+      }
+    }
+    ```
 
-## JSON Structure Example
-
+## Shadow Structure
 ```json
 {
   "state": {
     "desired": {
-      "status": 1,
+      "status": 0,
       "permission": 1
     },
     "reported": {
@@ -27,40 +62,71 @@ A shadow is a virtual representation of a device's state in the system. It store
       "permission": 1
     }
   },
-  "delta": {
-    "status": 1
-  }
+  "delta": {}
 }
 ```
 
-- `desired`: what the central control wants the device to do
-- `reported`: what the device is currently doing
-- `delta`: the difference between `desired` and `reported` (only present when needed)
+## State Management
+- **Desired State**: What the system wants the device to do
+- **Reported State**: What the device is actually doing
+- **Delta**: Differences between desired and reported states
+
+## Permission Control
+- Only admin users can modify device permissions
+- Regular users can only control device status
+- Permission values:
+  - 1: Allowed
+  - 0: Denied
+
+## File Storage
+- Shadow states are stored in JSON files
+- Default location: `../shadow/shadow.json`
+- Automatic file creation if not exists
+
+## Security
+- Token-based authentication
+- Role-based access control
+- Request logging
+- Error handling
+
+## Dependencies
+- Flask
+- Python 3.x
+- JSON file handling
+
+## Getting Started
+
+1. Install dependencies:
+   ```bash
+   pip install flask
+   ```
+
+2. Configure tokens in `main.py`:
+   ```python
+   TOKENS = {
+       "admin-token-123": "admin",
+       "user-token-456": "user",
+       "device-token-789": "device"
+   }
+   ```
+
+3. Run the server:
+   ```bash
+   python src/main.py
+   ```
+
+## Development Notes
+- Current implementation uses file-based storage
+- For production:
+  - Implement database storage
+  - Add proper token management
+  - Enable HTTPS
+  - Add rate limiting
+  - Implement proper logging
+
+## License
+This project is provided for educational purposes only. Free to modify and use in academic projects.
 
 ---
 
-## Workflow
-
-1. Central control sends desired state via API.
-2. Shadow calculates delta (difference between desired and reported).
-3. Local gateway fetches delta, performs hardware action.
-4. Device reports actual state, which updates the `reported` field.
-5. Shadow recalculates delta. If synchronized, delta becomes empty.
-
----
-
-## Emergency Local Control
-
-If central control is offline, the local gateway can enter emergency mode and override permission settings for safety reasons.
-
----
-
-## File Format
-
-Each device has a shadow stored in a JSON file:
-
-- `shadow_device001.json`
-- `shadow_device002.json`
-- ...
-
-These files are managed via the Flask backend.
+*For production use, ensure proper security measures are implemented.*
