@@ -59,7 +59,7 @@ IOT_Shadow_Display_UnixFinal/
 ## 🙌 Credits
 
 - Albert Wang（王建葦） – System Architecture, Backend, Shadow Logic
-- Andy Chean（陳稚翔） – Frontend Interface Design
+- Andy Chen（陳稚翔） – Frontend Interface Design
 
 ---
 

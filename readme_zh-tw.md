@@ -59,7 +59,7 @@ IOT_Shadow_Display_UnixFinal/
 ## 🙌 參與成員
 
 - 王建葦（Albert Wang）– 系統架構設計、後端與 Shadow 實作
-- 陳稚翔（Andy Chean）– 前端介面設計與整合
+- 陳稚翔（Andy Chen）– 前端介面設計與整合
 
 ---
 
