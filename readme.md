@@ -1,3 +1,6 @@
+## 中文版說明
+- https://github.com/JW-Albert/IOT_Shadow_Display_UnixFinal/blob/auth/readme_zh-tw.md
+- 
 # Authentication Server for IoT Shadow System
 
 This is a Flask-based authentication server that provides user authentication and time synchronization services for the IoT Shadow System. It handles user login, session management, and server time synchronization.
