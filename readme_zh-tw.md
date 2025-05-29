@@ -1,3 +1,6 @@
+## English version description
+- https://github.com/JW-Albert/IOT_Shadow_Display_UnixFinal/tree/auth/readme.md
+
 # IoT Shadow 系統認證伺服器
 
 這是一個基於 Flask 的認證伺服器，為 IoT Shadow 系統提供使用者認證與時間同步服務。它處理使用者登入、會話管理和伺服器時間同步。
