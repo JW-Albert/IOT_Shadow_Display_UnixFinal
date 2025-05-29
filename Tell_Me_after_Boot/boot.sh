@@ -1,11 +1,11 @@
 #! /bin/bash
 
-apt install curl -y
+sudo apt install curl -y
 
-chmod +x send_ip.sh
+sudochmod +x send_ip.sh
 
 sudo mv send-ip.service /etc/systemd/system/
 
-systemctl daemon-reload
-systemctl enable send-ip.service
-systemctl start send-ip.service
+sudo systemctl daemon-reload
+sudo systemctl enable send-ip.service
+sudo systemctl start send-ip.service
